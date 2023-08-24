@@ -15,12 +15,13 @@ BASELINE_REPOSITORY_URL: str = f"https://github.com/SecondSonConsulting/Baseline
 
 class BaselineBuilder:
 
-    def __init__(self, configuration_file: str, identifier: str = "", version: str = "1.0.0") -> None:
+    def __init__(self, configuration_file: str, identifier: str = "", version: str = "1.0.0", output: str = "Baseline.pkg") -> None:
         self.configuration_file = configuration_file
         self.configuration = plistlib.load(open(self.configuration_file, "rb"))
 
         self.identifier = identifier if identifier != "" else "com.example.baseline"
         self.version = version
+        self.output = output
 
         self._build_directory = tempfile.TemporaryDirectory()
         self._build_directory_path = Path(self._build_directory.name)
@@ -247,7 +248,7 @@ class BaselineBuilder:
         Generate package using macos_pkg_builder library.
         """
         pkg_obj = macos_pkg_builder.Packages(
-            pkg_output="Sample-Baseline.pkg",
+            pkg_output=self.output,
             pkg_bundle_id=self.identifier,
             pkg_version=self.version,
             pkg_preinstall_script=self._baseline_preinstall_script,
