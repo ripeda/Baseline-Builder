@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import shlex
 import argparse
 import plistlib
 import tempfile
@@ -36,6 +37,8 @@ class BaselineBuilder:
 
     def _fetch_baseline(self) -> None:
         """
+        Fetch Baseline from GitHub.
+        Use local copy if available.
         """
 
         print(f"Fetching Baseline v{BASELINE_VERSION}...")
@@ -69,16 +72,17 @@ class BaselineBuilder:
         self._baseline_configuration      = self._build_directory_path / "Baseline" / "BaselineConfig.plist"
 
 
-    def _resolve_file(self, file: str, variant: str) -> str:
+    def _resolve_file(self, file: str, variant: str, ignore_if_missing: bool = False) -> str:
         """
         Attempt to resolve the icon path and copy it to the build directory.
         Returns resolved icon path.
         """
 
+        if ignore_if_missing is False:
+            print(f"    Resolving file: {Path(file).name}...")
+
         local_destination      = ""
         production_destination = ""
-
-        print(f"    Resolving file: {Path(file).name}...")
 
         if  variant == "Scripts":
             local_destination = self._build_scripts_path
@@ -106,21 +110,27 @@ class BaselineBuilder:
             subprocess.run(["cp", "-a", file, local_destination])
             return str(production_destination + "/" + Path(file).name)
 
-        raise Exception(f"Unable to resolve icon: {file}")
+        if ignore_if_missing is True:
+            return file
+
+        raise Exception(f"Unable to resolve file: {file}")
 
 
     def _calculate_md5(self, file: str) -> str:
         """
+        Calculate the MD5 of a file.
         """
+        print(f"    Calculating MD5 for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
-        print(f"    Calculating MD5 for: {file}...")
         return subprocess.run(["md5", "-q", file], capture_output=True).stdout.decode("utf-8").strip()
 
 
     def _resolve_team_id(self, file) -> str:
         """
+        Determine the team ID of a package.
         """
+        print(f"    Determining team ID for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
 
@@ -133,8 +143,28 @@ class BaselineBuilder:
         return ""
 
 
+    def _resolve_arguments(self, arguments: str) -> list:
+        """
+        Resolve arguments into a list.
+        """
+        return shlex.split(arguments)
+
+
+    def _rebuild_arguments(self, arguments: list) -> str:
+        """
+        Rebuild arguments into a string.
+        """
+        arguments_string = ""
+        for argument in arguments:
+            if isinstance(argument, str) and " " in argument:
+                argument = f"'{argument}'"
+            arguments_string += f" {argument}"
+        return arguments_string
+
+
     def _parse_baseline_configuration(self) -> None:
         """
+        Parse the baseline configuration file and resolve any files.
         """
 
         for variant in ["InitialScripts", "Installomator", "Packages", "Scripts"]:
@@ -163,26 +193,24 @@ class BaselineBuilder:
                         item["TeamID"] = team_id
                     item["MD5"] = self._calculate_md5(item["PackagePath"])
 
+                if "Arguments" in item:
+                    arguments = self._resolve_arguments(item["Arguments"])
+                    for index, argument in enumerate(arguments):
+                        if argument.startswith("-"):
+                            continue
+                        if argument.startswith('"') or argument.startswith("'"):
+                            argument = argument[1:]
+                        if argument.endswith('"') or argument.endswith("'"):
+                            argument = argument[:-1]
+                        arguments[index] = self._resolve_file(argument, "Icon", ignore_if_missing=True)
+                    item["Arguments"] = self._rebuild_arguments(arguments)
+
 
         # Check if any files are passed in the dialog options.
         for variant in ["DialogListOptions", "DialogSuccessOptions", "DialogFailureOptions"]:
             if variant not in self.configuration:
                 continue
-            arguments_string = self.configuration[variant]
-            # Resolve into a list of arguments.
-            # Note we can't split if the user has escaped the space character.
-            arguments = []
-            argument = ""
-            for character in arguments_string:
-                if character == "\\":
-                    continue
-                if character == " ":
-                    arguments.append(argument)
-                    argument = ""
-                    continue
-                argument += character
-            if argument != "":
-                arguments.append(argument)
+            arguments = self._resolve_arguments(self.configuration[variant])
 
             print(f"Processing key: {variant}...")
 
@@ -196,12 +224,7 @@ class BaselineBuilder:
                     argument = argument[:-1]
                 arguments[index] = self._resolve_file(argument, "Icon")
 
-            # Rebuild the arguments string.
-            arguments_string = ""
-            for argument in arguments:
-                arguments_string += f" {argument}"
-
-            self.configuration[variant] = arguments_string
+            self.configuration[variant] = self._rebuild_arguments(arguments)
 
         # Write the configuration file.
         plistlib.dump(self.configuration, open(self._baseline_configuration, "wb"), sort_keys=False)
@@ -209,6 +232,7 @@ class BaselineBuilder:
 
     def _set_file_permissions(self) -> None:
         """
+        Set file permissions to ensure that when Baseline is installed, the files are executable.
         """
         if Path(self._baseline_core_script).exists():
             subprocess.run(["chmod", "+x", self._baseline_core_script])
@@ -220,6 +244,7 @@ class BaselineBuilder:
 
     def _generate_pkg(self) -> bool:
         """
+        Generate package using macos_pkg_builder library.
         """
         pkg_obj = macos_pkg_builder.Packages(
             pkg_output="Sample-Baseline.pkg",
@@ -244,6 +269,7 @@ class BaselineBuilder:
 
     def build(self) -> None:
         """
+        Build Baseline
         """
         self._fetch_baseline()
         self._parse_baseline_configuration()

@@ -11,4 +11,6 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/ripeda/Baseline-Builder-Core',
     python_requires='>=3.6',
+    scripts=['baseline.py'],
+    packages=[],
 )
