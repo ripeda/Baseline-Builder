@@ -13,4 +13,7 @@ setup(
     python_requires='>=3.6',
     scripts=['baseline.py'],
     packages=[],
+    install_requires=[
+        'macos-pkg-builder',
+    ],
 )
