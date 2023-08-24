@@ -15,22 +15,22 @@ Features implemented:
 
 Baseline Builder works by taking config files for Baseline, and generating a package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
 
+* See Baseline's documentation on how to configure: [Baseline Wiki](https://github.com/SecondSonConsulting/Baseline/wiki)
+
 Example of this is shown below:
 
 ```xml
-<dict>
-	<key>Packages</key>
-	<array>
-		<dict>
-			<key>DisplayName</key>
-			<string>RIPEDA Observer</string>
-			<key>PackagePath</key>
-			<string>/usr/local/Baseline/Packages/MonitoringClient.pkg</string>
-			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/MonitoringClient.icns</string>
-		</dict>
-	</array>
-  ...
+<key>Packages</key>
+<array>
+  <dict>
+    <key>DisplayName</key>
+    <string>RIPEDA Observer</string>
+    <key>PackagePath</key>
+    <string>/usr/local/Baseline/Packages/MonitoringClient.pkg</string>
+    <key>Icon</key>
+    <string>/usr/local/Baseline/Icons/MonitoringClient.icns</string>
+  </dict>
+</array>
 ```
 
 The project will attempt to resolve the `PackagePath` and `Icon` keys through scanning the local directory:
