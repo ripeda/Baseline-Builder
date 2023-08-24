@@ -1,6 +1,7 @@
 # Baseline Builder
 
-Python-based Baseline Builder, with the goal of streamlining package building for multiple clients. Designed for CI/CD integration with Python 3.6+.
+
+Python-based tooling for generating [Baseline packages](https://github.com/SecondSonConsulting/Baseline), with the goal of streamlining package building for multiple clients. Designed for CI/CD integration with Python 3.6+.
 
 ------------
 
@@ -19,7 +20,7 @@ pip3 install baseline
 
 ## Usage
 
-Baseline Builder works by using config files using Baseline's spec, and generates a Baseline package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
+Baseline Builder works by taking config files for Baseline, and generating a package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
 
 ```py
 import baseline
