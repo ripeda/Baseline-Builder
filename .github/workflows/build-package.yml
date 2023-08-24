@@ -35,6 +35,12 @@ jobs:
       - name: Validate twine
         run: twine check dist/*
 
+      - name: Install Package
+        run: pip3 install dist/*.whl
+
+      - name: Validate (RIPEDA Engineering Configuration)
+        run: python3 'Samples/RIPEDA Engineering/main.py'
+
       - name: Upload Wheel Package
         uses: actions/upload-artifact@v2
         with:

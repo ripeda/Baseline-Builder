@@ -17,13 +17,13 @@ class BaselineBuilder:
 
     def __init__(self, configuration_file: str, identifier: str = "", version: str = "1.0.0", output: str = "Baseline.pkg") -> None:
         self.configuration_file = configuration_file
-        self.configuration = plistlib.load(open(self.configuration_file, "rb"))
+        self.configuration      = plistlib.load(open(self.configuration_file, "rb"))
 
         self.identifier = identifier if identifier != "" else "com.example.baseline"
-        self.version = version
-        self.output = output
+        self.version    = version
+        self.output     = output
 
-        self._build_directory = tempfile.TemporaryDirectory()
+        self._build_directory      = tempfile.TemporaryDirectory()
         self._build_directory_path = Path(self._build_directory.name)
 
         self._build_pkg_path             = Path(self._build_directory_path / "Packages")
@@ -157,7 +157,7 @@ class BaselineBuilder:
         """
         arguments_string = ""
         for argument in arguments:
-            if isinstance(argument, str) and " " in argument:
+            if isinstance(argument, str):
                 argument = f"'{argument}'"
             arguments_string += f" {argument}"
         return arguments_string
@@ -254,14 +254,14 @@ class BaselineBuilder:
             pkg_preinstall_script=self._baseline_preinstall_script,
             pkg_postinstall_script=self._baseline_postinstall_script,
             pkg_file_structure={
-                f"{self._baseline_launch_daemon}" :         "/Library/LaunchDaemons/com.secondsonconsulting.baseline.plist",
-                f"{self._baseline_core_script}" :           "/usr/local/Baseline/Baseline.sh",
-                f"{self._baseline_configuration}" :         "/usr/local/Baseline/BaselineConfig.plist",
+                f"{self._baseline_launch_daemon}" : "/Library/LaunchDaemons/com.secondsonconsulting.baseline.plist",
+                f"{self._baseline_core_script}" :   "/usr/local/Baseline/Baseline.sh",
+                f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist",
 
                 # Optional if user requested
-                **({ f"{self._build_pkg_path}":             "/usr/local/Baseline/Packages" }       if self._build_pkg_path.exists()     else {}),
-                **({ f"{self._build_scripts_path}":         "/usr/local/Baseline/Scripts"  }       if self._build_scripts_path.exists() else {}),
-                **({ f"{self._build_icons_path}":           "/usr/local/Baseline/Icons"    }       if self._build_icons_path.exists()   else {}),
+                **({ f"{self._build_pkg_path}":     "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
+                **({ f"{self._build_scripts_path}": "/usr/local/Baseline/Scripts"  } if self._build_scripts_path.exists() else {}),
+                **({ f"{self._build_icons_path}":   "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
             }
         )
 
