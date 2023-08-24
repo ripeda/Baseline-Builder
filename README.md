@@ -47,7 +47,7 @@ Baseline Builder Directory:
 ## Installation
 
 ```
-pip3 install baseline
+pip3 install baseline-builder
 ```
 
 
