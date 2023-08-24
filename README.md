@@ -17,18 +17,18 @@ Baseline Builder works by taking config files for Baseline, and generating a pac
 
 * See Baseline's documentation on how to configure: [Baseline Wiki](https://github.com/SecondSonConsulting/Baseline/wiki)
 
-Example of this is shown below:
+Example configuration can be found in the [Samples](Samples) directory. Below is pulled from RIPEDA Engineering configuration:
 
 ```xml
 <key>Packages</key>
 <array>
   <dict>
     <key>DisplayName</key>
-    <string>RIPEDA Observer</string>
+    <string>Printer</string>
     <key>PackagePath</key>
-    <string>/usr/local/Baseline/Packages/MonitoringClient.pkg</string>
+    <string>/usr/local/Baseline/Packages/Printer.pkg</string>
     <key>Icon</key>
-    <string>/usr/local/Baseline/Icons/MonitoringClient.icns</string>
+    <string>/usr/local/Baseline/Icons/Scripts-Printer.png</string>
   </dict>
 </array>
 ```
@@ -38,9 +38,9 @@ The project will attempt to resolve the `PackagePath` and `Icon` keys through sc
 Baseline Builder Directory:
 - client.plist
 - Packages:
-  - MonitoringClient.pkg
+  - Printer.pkg
 - Icons:
-  - MonitoringClient.icns
+  - Scripts-Printer.png
 ```
 
 
@@ -57,6 +57,6 @@ pip3 install baseline
 ```py
 import baseline
 
-baseline_obj = baseline.BaselineBuilder("client.plist", "com.ripeda.baseline.client", "1.0.0")
+baseline_obj = baseline.BaselineBuilder("ripeda.plist", "com.ripeda.baseline.engineering", "1.0.0")
 baseline_obj.build()
 ```
