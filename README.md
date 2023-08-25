@@ -1,7 +1,7 @@
 # Baseline Builder
 
 
-Python-based tooling for generating [Baseline packages](https://github.com/SecondSonConsulting/Baseline), with the goal of streamlining package deployment for multiple clients. Designed for easier CI/CD integration with Python 3.6+.
+Python-based tooling for generating [Baseline packages](https://github.com/SecondSonConsulting/Baseline), for streamlining package building of multiple clients. Designed for easier CI/CD integration with Python 3.
 
 ------------
 
@@ -10,12 +10,14 @@ Features implemented:
   - Scans in same directory as invocation script
 - Calculates MD5 for scripts and packages
 - Determines Team ID for local packages
+- Easy imports for chaining into larger CI/CD workflows
 
 ## Logic
 
-Baseline Builder works by taking config files for Baseline, and generating a package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
+Baseline Builder works by taking configuration files for Baseline, and generating a package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
 
 * See Baseline's documentation on how to configure: [Baseline Wiki](https://github.com/SecondSonConsulting/Baseline/wiki)
+* Project expects a BaselineConfig.plist to be provided, MDM Profiles are currently not supported
 
 Example configuration can be found in the [Samples](Samples) directory. Below is pulled from RIPEDA Engineering configuration:
 
