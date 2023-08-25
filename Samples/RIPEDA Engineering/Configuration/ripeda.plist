@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>DialogListOptions</key>
-	<string>--icon "/usr/local/Baseline/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Icons/RIPEDA-Overlay.png" --bannerimage "/usr/local/Baseline/Icons/RIPEDA-Banner.png"</string>
+	<string>--icon "/usr/local/Baseline/Assets/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Assets/Icons/RIPEDA-Overlay.png" --bannerimage "/usr/local/Baseline/Assets/Icons/RIPEDA-Banner.png"</string>
 	<key>DialogSuccessOptions</key>
-	<string>--icon "/usr/local/Baseline/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Icons/RIPEDA-Overlay.png" --bannerimage "/usr/local/Baseline/Icons/RIPEDA-Banner.png"</string>
+	<string>--icon "/usr/local/Baseline/Assets/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Assets/Icons/RIPEDA-Overlay.png" --bannerimage "/usr/local/Baseline/Assets/Icons/RIPEDA-Banner.png"</string>
 	<key>DialogFailureOptions</key>
-	<string>--icon "/usr/local/Baseline/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Icons/RIPEDA-Overlay.png"</string>
+	<string>--icon "/usr/local/Baseline/Assets/Icons/RIPEDA-Icon.png" --overlayicon "/usr/local/Baseline/Assets/Icons/RIPEDA-Overlay.png"</string>
 	<key>Restart</key>
     <string>false</string>
 	<key>InitialScripts</key>
@@ -21,7 +21,7 @@
 			<key>Label</key>
 			<string>zoom</string>
 			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/Zoom.icns</string>
+			<string>/usr/local/Baseline/Assets/Icons/Zoom.icns</string>
 		</dict>
 		<dict>
 			<key>DisplayName</key>
@@ -29,7 +29,7 @@
 			<key>Label</key>
 			<string>googlechromepkg</string>
 			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/Chrome.icns</string>
+			<string>/usr/local/Baseline/Assets/Icons/Chrome.icns</string>
 		</dict>
 	</array>
 	<key>Packages</key>
@@ -38,9 +38,9 @@
 			<key>DisplayName</key>
 			<string>Printer</string>
 			<key>PackagePath</key>
-			<string>/usr/local/Baseline/Packages/Printer.pkg</string>
+			<string>/usr/local/Baseline/Assets/Packages/Printer.pkg</string>
 			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/Scripts-Printer.png</string>
+			<string>/usr/local/Baseline/Assets/Icons/Scripts-Printer.png</string>
 		</dict>
 	</array>
 	<key>Scripts</key>
@@ -49,19 +49,19 @@
 			<key>DisplayName</key>
 			<string>Removing Stock Applications</string>
 			<key>ScriptPath</key>
-			<string>/usr/local/Baseline/Scripts/universal_remove_stock_apps.sh</string>
+			<string>/usr/local/Baseline/Assets/Scripts/universal_remove_stock_apps.sh</string>
 			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/Scripts-Stock-Apps.png</string>
+			<string>/usr/local/Baseline/Assets/Icons/Scripts-Stock-Apps.png</string>
 		</dict>
         <dict>
 			<key>DisplayName</key>
 			<string>Configuring Dock</string>
 			<key>ScriptPath</key>
-			<string>/usr/local/Baseline/Scripts/universal_dock.sh</string>
+			<string>/usr/local/Baseline/Assets/Scripts/universal_dock.sh</string>
 			<key>Arguments</key>
             <string>--append "Slack" "zoom.us"</string>
 			<key>Icon</key>
-			<string>/usr/local/Baseline/Icons/Scripts-Dock.png</string>
+			<string>/usr/local/Baseline/Assets/Icons/Scripts-Dock.png</string>
 		</dict>
 	</array>
 </dict>
