@@ -26,9 +26,9 @@ Example configuration can be found in the [Samples](Samples) directory. Below is
     <key>DisplayName</key>
     <string>Printer</string>
     <key>PackagePath</key>
-    <string>/usr/local/Baseline/Packages/Printer.pkg</string>
+    <string>Assets/Packages/Printer.pkg</string>
     <key>Icon</key>
-    <string>/usr/local/Baseline/Icons/Scripts-Printer.png</string>
+    <string>Assets/Icons/Printer.png</string>
   </dict>
 </array>
 ```
@@ -37,10 +37,11 @@ The project will attempt to resolve the `PackagePath` and `Icon` keys through sc
 ```
 Baseline Builder Directory:
 - client.plist
-- Packages:
-  - Printer.pkg
-- Icons:
-  - Scripts-Printer.png
+- Assets:
+  - Packages:
+    - Printer.pkg
+  - Icons:
+    - Printer.png
 ```
 
 
@@ -49,7 +50,6 @@ Baseline Builder Directory:
 ```
 pip3 install baseline-builder
 ```
-
 
 ## Usage
 
