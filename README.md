@@ -58,14 +58,15 @@ pip3 install baseline-builder
 import baseline
 
 baseline_obj = baseline.BaselineBuilder(
-                  configuration_file="ripeda.plist",
-                  identifier="com.ripeda.baseline.engineering",
-                  version="1.0.0",
-                  output="RIPEDA Baseline.pkg"
+                    configuration_file="ripeda.plist",
+                    identifier="com.ripeda.baseline.engineering",
+                    version="1.0.0",
+                    output="RIPEDA Baseline.pkg"
                 )
+
 if baseline_obj.build() is False:
-  print("Failed to build package")
-  return
+    print("Failed to build package")
+    return
 
 print("Package built successfully")
 ```
