@@ -4,24 +4,32 @@ import shlex
 import argparse
 import plistlib
 import tempfile
+import requests
 import subprocess
 import macos_pkg_builder
 
 from pathlib import Path
 
-BASELINE_VERSION:        str = "1.2"
-BASELINE_REPOSITORY_URL: str = f"https://github.com/SecondSonConsulting/Baseline/archive/refs/tags/v{BASELINE_VERSION}.zip"
+# Avoid API rate limits by Github.
+SWIFTDIALOG_PKG_CACHE: str = ""
+BASELINE_ZIP_CACHE:    str = ""
 
 
 class BaselineBuilder:
 
-    def __init__(self, configuration_file: str, identifier: str = "", version: str = "1.0.0", output: str = "Baseline.pkg") -> None:
+    def __init__(
+            self, configuration_file: str, identifier: str = "", version: str = "1.0.0", output: str = "Baseline.pkg",
+            cache_swift_dialog: bool = False, baseline_version: str = "latest", swiftdialog_version: str = "latest"
+        ) -> None:
+
         self.configuration_file = configuration_file
         self.configuration      = plistlib.load(open(self.configuration_file, "rb"))
 
         self.identifier = identifier if identifier != "" else "com.example.baseline"
         self.version    = version
         self.output     = output
+
+        self._build_cache_swift_dialog = cache_swift_dialog
 
         self._build_directory      = tempfile.TemporaryDirectory()
         self._build_directory_path = Path(self._build_directory.name)
@@ -36,31 +44,47 @@ class BaselineBuilder:
         self._baseline_launch_daemon      = None
 
 
-    def _fetch_baseline(self) -> None:
+        self._baseline_version = baseline_version
+        self._swiftdialog_version = swiftdialog_version
+
+
+    def _fetch_baseline(self, version: str) -> None:
         """
         Fetch Baseline from GitHub.
         Use local copy if available.
         """
 
-        print(f"Fetching Baseline v{BASELINE_VERSION}...")
+        if version == "latest":
+            api_url = f"https://api.github.com/repos/secondsonconsulting/Baseline/releases/latest"
+        else:
+            api_url = f"https://api.github.com/repos/secondsonconsulting/Baseline/releases/tags/{version}"
+
+        print(f"Fetching Baseline: {version}...")
 
         if not Path("Baseline.zip").exists():
-            # Download the baseline repository.
-            print(f"  Downloading...")
-            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", BASELINE_REPOSITORY_URL], cwd=self._build_directory_path)
+            global BASELINE_ZIP_CACHE
+            if BASELINE_ZIP_CACHE == "":
+                print("  No cached URL for Baseline, fetching from GitHub...")
+                BASELINE_ZIP_CACHE = requests.get(api_url).json()["zipball_url"]
+
+            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", BASELINE_ZIP_CACHE], cwd=self._build_directory_path)
+
         else:
             print(f"  Using existing Baseline.zip")
-            subprocess.run(["cp", "Baseline.zip", self._build_directory_path])
+            subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path])
 
         # Unzip the baseline zip into Baseline folder.
         print(f"  Unzipping...")
         subprocess.run(["unzip", "-q", "Baseline.zip"], cwd=self._build_directory_path)
 
-        # Rename the Baseline folder to Baseline
+        # Rename first folder to Baseline
         for item in self._build_directory_path.iterdir():
-            if item.name.startswith("Baseline-"):
-                item.rename(self._build_directory_path / "Baseline")
-
+            if not item.is_dir():
+                continue
+            if "Baseline" not in item.name:
+                continue
+            item.rename(self._build_directory_path / "Baseline")
+            break
 
         # Remove the Baseline.zip file.
         (self._build_directory_path / "Baseline.zip").unlink()
@@ -71,6 +95,34 @@ class BaselineBuilder:
         self._baseline_postinstall_script = self._build_directory_path / "Baseline" / "Build" / "Baseline_daemon-postinstall.sh"
         self._baseline_launch_daemon      = self._build_directory_path / "Baseline" / "Build" / "com.secondsonconsulting.baseline.plist"
         self._baseline_configuration      = self._build_directory_path / "Baseline" / "BaselineConfig.plist"
+
+
+    def _fetch_swift_dialog(self, version) -> None:
+
+        if version == "latest":
+            api_url = f"https://api.github.com/repos/swiftDialog/swiftDialog/releases/latest"
+        else:
+            api_url = f"https://api.github.com/repos/swiftDialog/swiftDialog/releases/tags/{version}"
+
+        print(f"Fetching swiftDialog: {version}...")
+
+        if not Path("swiftDialog.pkg").exists():
+            global SWIFTDIALOG_PKG_CACHE
+            if SWIFTDIALOG_PKG_CACHE == "":
+                print("  No cached URL for swiftDialog, fetching from GitHub...")
+                SWIFTDIALOG_PKG_CACHE = requests.get(api_url).json()["assets"][0]["browser_download_url"]
+
+            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", SWIFTDIALOG_PKG_CACHE], cwd=self._build_directory_path)
+
+        else:
+            print(f"  Using existing swiftDialog.pkg")
+            subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_directory_path])
+
+        # Copy the swiftDialog.pkg into the packages folder.
+        print(f"  Copying...")
+        if not self._build_pkg_path.exists():
+            self._build_pkg_path.mkdir()
+        subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=self._build_directory_path)
 
 
     def _resolve_file(self, file: str, variant: str, ignore_if_missing: bool = False) -> str:
@@ -108,7 +160,7 @@ class BaselineBuilder:
 
         # Check if a copy exists next to us
         if (Path(file)).exists():
-            subprocess.run(["cp", "-a", file, local_destination])
+            subprocess.run(["cp", "-ac", file, local_destination])
             return str(production_destination + "/" + Path(file).name)
 
         if ignore_if_missing is True:
@@ -255,13 +307,13 @@ class BaselineBuilder:
             pkg_postinstall_script=self._baseline_postinstall_script,
             pkg_file_structure={
                 f"{self._baseline_launch_daemon}" : "/Library/LaunchDaemons/com.secondsonconsulting.baseline.plist",
-                f"{self._baseline_core_script}" :   "/usr/local/Baseline/Baseline.sh",
+                f"{self._baseline_core_script}"   : "/usr/local/Baseline/Baseline.sh",
                 f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist",
 
                 # Optional if user requested
-                **({ f"{self._build_pkg_path}":     "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
+                **({ f"{self._build_pkg_path}"    : "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
                 **({ f"{self._build_scripts_path}": "/usr/local/Baseline/Scripts"  } if self._build_scripts_path.exists() else {}),
-                **({ f"{self._build_icons_path}":   "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
+                **({ f"{self._build_icons_path}"  : "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
             }
         )
 
@@ -272,7 +324,9 @@ class BaselineBuilder:
         """
         Build Baseline
         """
-        self._fetch_baseline()
+        self._fetch_baseline(version=self._baseline_version)
+        if self._build_cache_swift_dialog is True:
+            self._fetch_swift_dialog(version=self._swiftdialog_version)
         self._parse_baseline_configuration()
         self._set_file_permissions()
         if self._generate_pkg() is False:

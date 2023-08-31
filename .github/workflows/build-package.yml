@@ -18,10 +18,10 @@ jobs:
       - name: Set Python 3
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11
 
       - name: Set up Python 3 libraries
-        run: pip3 install setuptools wheel twine build
+        run: pip3 install setuptools wheel twine build requests
 
       - name: Validate setup.py
         run: python3 setup.py check -m -s
