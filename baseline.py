@@ -11,15 +11,27 @@ import macos_pkg_builder
 from pathlib import Path
 
 # Avoid API rate limits by Github.
-SWIFTDIALOG_PKG_CACHE: str = ""
-BASELINE_ZIP_CACHE:    str = ""
+BASELINE_ZIP_CACHE:      str = ""
+SWIFTDIALOG_PKG_CACHE:   str = ""
+INSTALLOMATOR_PKG_CACHE: str = ""
 
+DOWNLOAD_CACHE: tempfile.TemporaryDirectory = tempfile.TemporaryDirectory()
 
 class BaselineBuilder:
 
     def __init__(
-            self, configuration_file: str, identifier: str = "", version: str = "1.0.0", output: str = "Baseline.pkg",
-            cache_swift_dialog: bool = False, baseline_version: str = "latest", swiftdialog_version: str = "latest"
+            self, configuration_file: str,
+
+            identifier: str = "",
+            version:    str = "1.0.0",
+            output:     str = "Baseline.pkg",
+
+            cache_swift_dialog:   bool = False,
+            cache_installomator:  bool = False,
+
+            baseline_version:      str = "latest",
+            swiftdialog_version:   str = "latest",
+            installomator_version: str = "latest"
         ) -> None:
 
         self.configuration_file = configuration_file
@@ -28,8 +40,6 @@ class BaselineBuilder:
         self.identifier = identifier if identifier != "" else "com.example.baseline"
         self.version    = version
         self.output     = output
-
-        self._build_cache_swift_dialog = cache_swift_dialog
 
         self._build_directory      = tempfile.TemporaryDirectory()
         self._build_directory_path = Path(self._build_directory.name)
@@ -43,9 +53,12 @@ class BaselineBuilder:
         self._baseline_postinstall_script = None
         self._baseline_launch_daemon      = None
 
+        self._build_cache_swift_dialog  = cache_swift_dialog
+        self._build_cache_installomator = cache_installomator
 
-        self._baseline_version = baseline_version
-        self._swiftdialog_version = swiftdialog_version
+        self._baseline_version      = baseline_version
+        self._swiftdialog_version   = swiftdialog_version
+        self._installomator_version = installomator_version
 
 
     def _fetch_baseline(self, version: str) -> None:
@@ -61,17 +74,21 @@ class BaselineBuilder:
 
         print(f"Fetching Baseline: {version}...")
 
-        if not Path("Baseline.zip").exists():
-            global BASELINE_ZIP_CACHE
-            if BASELINE_ZIP_CACHE == "":
-                print("  No cached URL for Baseline, fetching from GitHub...")
-                BASELINE_ZIP_CACHE = requests.get(api_url).json()["zipball_url"]
+        search_paths = [
+            DOWNLOAD_CACHE.name + "/Baseline.zip",
+            "Baseline.zip"
+        ]
 
-            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", BASELINE_ZIP_CACHE], cwd=self._build_directory_path)
+        for path in search_paths:
+            if Path(path).exists():
+                print(f"  Using existing Baseline.zip: {path}")
+                subprocess.run(["cp", "-c", path, self._build_directory_path])
+                break
 
-        else:
-            print(f"  Using existing Baseline.zip")
-            subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path])
+        if Path("Baseline.zip").exists() is False:
+            print("  No cached URL for Baseline, fetching from GitHub...")
+            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", requests.get(api_url).json()["zipball_url"]], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
         # Unzip the baseline zip into Baseline folder.
         print(f"  Unzipping...")
@@ -98,6 +115,10 @@ class BaselineBuilder:
 
 
     def _fetch_swift_dialog(self, version) -> None:
+        """
+        Fetch swiftDialog from GitHub.
+        Use local copy if available.
+        """
 
         if version == "latest":
             api_url = f"https://api.github.com/repos/swiftDialog/swiftDialog/releases/latest"
@@ -106,23 +127,44 @@ class BaselineBuilder:
 
         print(f"Fetching swiftDialog: {version}...")
 
-        if not Path("swiftDialog.pkg").exists():
-            global SWIFTDIALOG_PKG_CACHE
-            if SWIFTDIALOG_PKG_CACHE == "":
-                print("  No cached URL for swiftDialog, fetching from GitHub...")
-                SWIFTDIALOG_PKG_CACHE = requests.get(api_url).json()["assets"][0]["browser_download_url"]
-
-            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", SWIFTDIALOG_PKG_CACHE], cwd=self._build_directory_path)
-
-        else:
-            print(f"  Using existing swiftDialog.pkg")
-            subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_directory_path])
-
-        # Copy the swiftDialog.pkg into the packages folder.
-        print(f"  Copying...")
         if not self._build_pkg_path.exists():
             self._build_pkg_path.mkdir()
-        subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=self._build_directory_path)
+
+        for path in [DOWNLOAD_CACHE.name + "/swiftDialog.pkg", "swiftDialog.pkg"]:
+            if Path(path).exists():
+                print(f"  Using existing swiftDialog.pkg: {path}")
+                subprocess.run(["cp", "-c", path, self._build_pkg_path])
+                break
+
+        if Path("swiftDialog.pkg").exists() is False:
+            print("  No cached URL for swiftDialog, fetching from GitHub...")
+            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
+
+
+    def _fetch_installomator(self, version) -> None:
+        """
+        Fetch Installomator from GitHub.
+        Use local copy if available.
+        """
+
+        if version == "latest":
+            api_url = f"https://api.github.com/repos/Installomator/Installomator/releases/latest"
+        else:
+            api_url = f"https://api.github.com/repos/Installomator/Installomator/releases/tags/{version}"
+
+        print(f"Fetching Installomator: {version}...")
+
+        for path in [DOWNLOAD_CACHE.name + "/Installomator.pkg", "Installomator.pkg"]:
+            if Path(path).exists():
+                print(f"  Using existing Installomator.pkg: {path}")
+                subprocess.run(["cp", "-c", path, self._build_pkg_path])
+                break
+
+        if Path("Installomator.pkg").exists() is False:
+            print("  No cached URL for Installomator, fetching from GitHub...")
+            subprocess.run(["curl", "-s", "-L", "-o", "Installomator.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run(["cp", "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
     def _resolve_file(self, file: str, variant: str, ignore_if_missing: bool = False) -> str:
@@ -179,7 +221,7 @@ class BaselineBuilder:
         return subprocess.run(["md5", "-q", file], capture_output=True).stdout.decode("utf-8").strip()
 
 
-    def _resolve_team_id(self, file) -> str:
+    def _resolve_team_id(self, file: str) -> str:
         """
         Determine the team ID of a package.
         """
@@ -210,7 +252,8 @@ class BaselineBuilder:
         arguments_string = ""
         for argument in arguments:
             if isinstance(argument, str):
-                argument = f"'{argument}'"
+                if " " in argument:
+                    argument = f"'{argument}'"
             arguments_string += f" {argument}"
         return arguments_string
 
@@ -320,6 +363,39 @@ class BaselineBuilder:
         return pkg_obj.build()
 
 
+    def _validate(self) -> None:
+        """
+        Validate the configuration file.
+        """
+        config = plistlib.load(open(self._baseline_configuration, "rb"))
+
+        print("Validating configuration file...")
+        for variant in ["InitialScripts", "Packages", "Scripts"]:
+            if variant not in config:
+                continue
+            for item in config[variant]:
+                if "DisplayName" not in item:
+                    raise Exception(f"Missing DisplayName in {variant} item.")
+                path = "ScriptPath" if variant == "Scripts" else "PackagePath"
+                if path in item:
+                    file = Path(f"{self._build_directory_path}/{item[path]}".replace("/usr/local/Baseline", ""))
+                    if Path(file).exists() is False:
+                        raise Exception(f"Unable to find {path}: {file}")
+                    if "MD5" not in item:
+                        raise Exception(f"Missing MD5 in {variant} item.")
+                    if item["MD5"] != self._calculate_md5(str(file)):
+                        raise Exception(f"MD5 mismatch for {path}: {item[path]}")
+                    if "TeamID" in item:
+                        if item["TeamID"] != self._resolve_team_id(str(file)):
+                            raise Exception(f"TeamID mismatch for {path}: {item[path]}")
+                if "Icon" in item:
+                    file = Path(f"{self._build_directory_path}/{item['Icon']}".replace("/usr/local/Baseline", ""))
+                    if Path(file).exists() is False:
+                        raise Exception(f"Unable to find Icon: {file}")
+
+        print("Configuration file is valid.")
+
+
     def build(self) -> None:
         """
         Build Baseline
@@ -327,8 +403,11 @@ class BaselineBuilder:
         self._fetch_baseline(version=self._baseline_version)
         if self._build_cache_swift_dialog is True:
             self._fetch_swift_dialog(version=self._swiftdialog_version)
+        if self._build_cache_installomator is True:
+            self._fetch_installomator(version=self._installomator_version)
         self._parse_baseline_configuration()
         self._set_file_permissions()
+        self._validate()
         if self._generate_pkg() is False:
             raise Exception("Failed to generate pkg.")
 

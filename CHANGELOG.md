@@ -9,6 +9,11 @@
     - `baseline_version` (defaults to `latest`)
     - `swift_dialog_version` (defaults to `latest`, requires `cache_swift_dialog` to be `True`)
 - Implement Copy on Write (CoW) during `/bin/cp` calls for reduced disk usage during build
+- Add final pass to configuration file to ensure sanity
+  - Performed after config is written back to disk, to simulate Baseline loading the config
+- Add backend support for Installomator caching
+  - Currently Baseline version is unsupported, plan to implement in future
+- Only add brackets to arguments if they have a space in them
 
 ## 1.0.1
 - Create output directory if missing
