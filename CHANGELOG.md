@@ -14,6 +14,7 @@
 - Add backend support for Installomator caching
   - Currently Baseline version is unsupported, plan to implement in future
 - Only add brackets to arguments if they have a space in them
+  - Opt for double quotes instead of single quotes
 
 ## 1.0.1
 - Create output directory if missing

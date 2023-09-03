@@ -253,7 +253,7 @@ class BaselineBuilder:
         for argument in arguments:
             if isinstance(argument, str):
                 if " " in argument:
-                    argument = f"'{argument}'"
+                    argument = f'"{argument}"'
             arguments_string += f" {argument}"
         return arguments_string
 
