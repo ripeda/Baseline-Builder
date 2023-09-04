@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.0.3
+
 ## 1.0.2
 - Add support for caching swiftDialog and Installomator pkg (creates more stable build if repo moves/is not available)
   - New optional parameters:
