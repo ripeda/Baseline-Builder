@@ -85,8 +85,8 @@ class BaselineBuilder:
                 subprocess.run(["cp", "-c", path, self._build_directory_path])
                 break
 
-        if Path("Baseline.zip").exists() is False:
-            print("  No cached URL for Baseline, fetching from GitHub...")
+        if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
+            print("  No cached pkg for Baseline, fetching from GitHub...")
             subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", requests.get(api_url).json()["zipball_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
@@ -136,8 +136,8 @@ class BaselineBuilder:
                 subprocess.run(["cp", "-c", path, self._build_pkg_path])
                 break
 
-        if Path("swiftDialog.pkg").exists() is False:
-            print("  No cached URL for swiftDialog, fetching from GitHub...")
+        if Path(f"{self._build_pkg_path}/swiftDialog.pkg").exists() is False:
+            print("  No cached pkg for swiftDialog, fetching from GitHub...")
             subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
@@ -161,8 +161,8 @@ class BaselineBuilder:
                 subprocess.run(["cp", "-c", path, self._build_pkg_path])
                 break
 
-        if Path("Installomator.pkg").exists() is False:
-            print("  No cached URL for Installomator, fetching from GitHub...")
+        if Path(f"{self._build_pkg_path}/Installomator.pkg").exists() is False:
+            print("  No cached pkg for Installomator, fetching from GitHub...")
             subprocess.run(["curl", "-s", "-L", "-o", "Installomator.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 

@@ -1,6 +1,7 @@
 # Baseline Builder
 
 ## 1.0.3
+- Resolve caching logic incorrectly pulling from GitHub when local file is present
 
 ## 1.0.2
 - Add support for caching swiftDialog and Installomator pkg (creates more stable build if repo moves/is not available)
