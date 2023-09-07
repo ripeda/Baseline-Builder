@@ -4,3 +4,4 @@ __pycache__
 *.zip
 /build
 /dist
+/Samples/RIPEDA Engineering/RIPEDA Engineering Baseline.pkg

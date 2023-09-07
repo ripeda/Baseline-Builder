@@ -87,7 +87,13 @@ class BaselineBuilder:
 
         if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
             print("  No cached pkg for Baseline, fetching from GitHub...")
-            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", requests.get(api_url).json()["zipball_url"]], cwd=DOWNLOAD_CACHE.name)
+            result = requests.get(api_url)
+            if result.status_code != 200:
+                raise Exception(f"Unable to fetch Baseline from GitHub: {result.status_code}")
+            result = result.json()
+            if "zipball_url" not in result:
+                raise Exception(f"No zipball_url in GitHub response: {result}")
+            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", result["zipball_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
         # Unzip the baseline zip into Baseline folder.
@@ -138,7 +144,17 @@ class BaselineBuilder:
 
         if Path(f"{self._build_pkg_path}/swiftDialog.pkg").exists() is False:
             print("  No cached pkg for swiftDialog, fetching from GitHub...")
-            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            result = requests.get(api_url)
+            if result.status_code != 200:
+                raise Exception(f"Unable to fetch swiftDialog from GitHub: {result.status_code}")
+            result = result.json()
+            if "assets" not in result:
+                raise Exception(f"No assets in GitHub response: {result}")
+            if len(result["assets"]) <= 0:
+                raise Exception(f"No assets in GitHub response: {result}")
+            if "browser_download_url" not in result["assets"][0]:
+                raise Exception(f"No browser_download_url in GitHub response: {result}")
+            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
@@ -163,7 +179,17 @@ class BaselineBuilder:
 
         if Path(f"{self._build_pkg_path}/Installomator.pkg").exists() is False:
             print("  No cached pkg for Installomator, fetching from GitHub...")
-            subprocess.run(["curl", "-s", "-L", "-o", "Installomator.pkg", requests.get(api_url).json()["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            result = requests.get(api_url)
+            if result.status_code != 200:
+                raise Exception(f"Unable to fetch Installomator from GitHub: {result.status_code}")
+            result = result.json()
+            if "assets" not in result:
+                raise Exception(f"No assets in GitHub response: {result}")
+            if len(result["assets"]) <= 0:
+                raise Exception(f"No assets in GitHub response: {result}")
+            if "browser_download_url" not in result["assets"][0]:
+                raise Exception(f"No browser_download_url in GitHub response: {result}")
+            subprocess.run(["curl", "-s", "-L", "-o", "Installomator.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
