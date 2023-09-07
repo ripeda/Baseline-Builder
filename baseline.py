@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import shlex
 import argparse
 import plistlib
@@ -61,6 +62,18 @@ class BaselineBuilder:
         self._installomator_version = installomator_version
 
 
+    def _fetch_api_content(self, url: str) -> requests.Response:
+        """
+        Fetch content, if GitHub link and token available, use them.
+        """
+        if "api.github.com" not in url:
+            return requests.get(url)
+        if "GITHUB_TOKEN" not in os.environ:
+            return requests.get(url)
+
+        return requests.get(url, headers={"Authorization": f"token {os.environ['GITHUB_TOKEN']}"})
+
+
     def _fetch_baseline(self, version: str) -> None:
         """
         Fetch Baseline from GitHub.
@@ -87,7 +100,7 @@ class BaselineBuilder:
 
         if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
             print("  No cached pkg for Baseline, fetching from GitHub...")
-            result = requests.get(api_url)
+            result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch Baseline from GitHub: {result.status_code}")
             result = result.json()
@@ -144,7 +157,7 @@ class BaselineBuilder:
 
         if Path(f"{self._build_pkg_path}/swiftDialog.pkg").exists() is False:
             print("  No cached pkg for swiftDialog, fetching from GitHub...")
-            result = requests.get(api_url)
+            result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch swiftDialog from GitHub: {result.status_code}")
             result = result.json()
@@ -179,7 +192,7 @@ class BaselineBuilder:
 
         if Path(f"{self._build_pkg_path}/Installomator.pkg").exists() is False:
             print("  No cached pkg for Installomator, fetching from GitHub...")
-            result = requests.get(api_url)
+            result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch Installomator from GitHub: {result.status_code}")
             result = result.json()
