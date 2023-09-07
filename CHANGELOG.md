@@ -4,7 +4,7 @@
 
 ## 1.0.4
 - Add support for API token authentication for GitHub
-  - Enviroment variable `GITHUB_TOKEN` will be used if present
+  - Environment variable `GITHUB_TOKEN` will be used if present
 
 ## 1.0.3
 - Resolve caching logic incorrectly pulling from GitHub when local file is present
