@@ -2,6 +2,7 @@
 
 import os
 import shlex
+import logging
 import argparse
 import plistlib
 import tempfile
@@ -85,7 +86,7 @@ class BaselineBuilder:
         else:
             api_url = f"https://api.github.com/repos/secondsonconsulting/Baseline/releases/tags/{version}"
 
-        print(f"Fetching Baseline: {version}...")
+        logging.info(f"Fetching Baseline: {version}...")
 
         search_paths = [
             DOWNLOAD_CACHE.name + "/Baseline.zip",
@@ -94,12 +95,12 @@ class BaselineBuilder:
 
         for path in search_paths:
             if Path(path).exists():
-                print(f"  Using existing Baseline.zip: {path}")
+                logging.info(f"  Using existing Baseline.zip: {path}")
                 subprocess.run(["cp", "-c", path, self._build_directory_path])
                 break
 
         if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
-            print("  No cached pkg for Baseline, fetching from GitHub...")
+            logging.info("  No cached pkg for Baseline, fetching from GitHub...")
             result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch Baseline from GitHub: {result.status_code}")
@@ -110,7 +111,7 @@ class BaselineBuilder:
             subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
         # Unzip the baseline zip into Baseline folder.
-        print(f"  Unzipping...")
+        logging.info(f"  Unzipping...")
         subprocess.run(["unzip", "-q", "Baseline.zip"], cwd=self._build_directory_path)
 
         # Rename first folder to Baseline
@@ -144,19 +145,19 @@ class BaselineBuilder:
         else:
             api_url = f"https://api.github.com/repos/swiftDialog/swiftDialog/releases/tags/{version}"
 
-        print(f"Fetching swiftDialog: {version}...")
+        logging.info(f"Fetching swiftDialog: {version}...")
 
         if not self._build_pkg_path.exists():
             self._build_pkg_path.mkdir()
 
         for path in [DOWNLOAD_CACHE.name + "/swiftDialog.pkg", "swiftDialog.pkg"]:
             if Path(path).exists():
-                print(f"  Using existing swiftDialog.pkg: {path}")
+                logging.info(f"  Using existing swiftDialog.pkg: {path}")
                 subprocess.run(["cp", "-c", path, self._build_pkg_path])
                 break
 
         if Path(f"{self._build_pkg_path}/swiftDialog.pkg").exists() is False:
-            print("  No cached pkg for swiftDialog, fetching from GitHub...")
+            logging.info("  No cached pkg for swiftDialog, fetching from GitHub...")
             result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch swiftDialog from GitHub: {result.status_code}")
@@ -182,16 +183,16 @@ class BaselineBuilder:
         else:
             api_url = f"https://api.github.com/repos/Installomator/Installomator/releases/tags/{version}"
 
-        print(f"Fetching Installomator: {version}...")
+        logging.info(f"Fetching Installomator: {version}...")
 
         for path in [DOWNLOAD_CACHE.name + "/Installomator.pkg", "Installomator.pkg"]:
             if Path(path).exists():
-                print(f"  Using existing Installomator.pkg: {path}")
+                logging.info(f"  Using existing Installomator.pkg: {path}")
                 subprocess.run(["cp", "-c", path, self._build_pkg_path])
                 break
 
         if Path(f"{self._build_pkg_path}/Installomator.pkg").exists() is False:
-            print("  No cached pkg for Installomator, fetching from GitHub...")
+            logging.info("  No cached pkg for Installomator, fetching from GitHub...")
             result = self._fetch_api_content(api_url)
             if result.status_code != 200:
                 raise Exception(f"Unable to fetch Installomator from GitHub: {result.status_code}")
@@ -213,7 +214,7 @@ class BaselineBuilder:
         """
 
         if ignore_if_missing is False:
-            print(f"    Resolving file: {Path(file).name}...")
+            logging.info(f"    Resolving file: {Path(file).name}...")
 
         local_destination      = ""
         production_destination = ""
@@ -254,7 +255,7 @@ class BaselineBuilder:
         """
         Calculate the MD5 of a file.
         """
-        print(f"    Calculating MD5 for: {Path(file).name}...")
+        logging.info(f"    Calculating MD5 for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
         return subprocess.run(["md5", "-q", file], capture_output=True).stdout.decode("utf-8").strip()
@@ -264,7 +265,7 @@ class BaselineBuilder:
         """
         Determine the team ID of a package.
         """
-        print(f"    Determining team ID for: {Path(file).name}...")
+        logging.info(f"    Determining team ID for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
 
@@ -308,13 +309,13 @@ class BaselineBuilder:
             if len(self.configuration[variant]) <= 0:
                 continue
 
-            print(f"Processing key: {variant}...")
+            logging.info(f"Processing key: {variant}...")
 
             for item in self.configuration[variant]:
                 if "DisplayName" not in item:
                     raise Exception(f"Missing DisplayName in {variant} item.")
 
-                print(f"  Processing item: {item['DisplayName']}")
+                logging.info(f"  Processing item: {item['DisplayName']}")
 
                 if "Icon" in item:
                     item["Icon"] = self._resolve_file(item["Icon"], "Icon")
@@ -347,7 +348,7 @@ class BaselineBuilder:
                 continue
             arguments = self._resolve_arguments(self.configuration[variant])
 
-            print(f"Processing key: {variant}...")
+            logging.info(f"Processing key: {variant}...")
 
             # Resolve any files in the arguments.
             for index, argument in enumerate(arguments):
@@ -408,7 +409,7 @@ class BaselineBuilder:
         """
         config = plistlib.load(open(self._baseline_configuration, "rb"))
 
-        print("Validating configuration file...")
+        logging.info("Validating configuration file...")
         for variant in ["InitialScripts", "Packages", "Scripts"]:
             if variant not in config:
                 continue
@@ -432,7 +433,7 @@ class BaselineBuilder:
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find Icon: {file}")
 
-        print("Configuration file is valid.")
+        logging.info("Configuration file is valid.")
 
 
     def build(self) -> None:
