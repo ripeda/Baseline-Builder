@@ -401,7 +401,7 @@ class BaselineBuilder:
                 **({ f"{self._build_pkg_path}"    : "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
                 **({ f"{self._build_scripts_path}": "/usr/local/Baseline/Scripts"  } if self._build_scripts_path.exists() else {}),
                 **({ f"{self._build_icons_path}"  : "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
-            }
+            },
             **({ "pkg_signing_identity": self._signing_identity } if self._signing_identity != "" else {}),
         )
 
