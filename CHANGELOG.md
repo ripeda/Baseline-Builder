@@ -3,6 +3,8 @@
 ## 1.0.5
 - Switch to logging module for printing
   - To be configured by the calling script
+- Add package signing support
+  - New `signing_identity` parameter passed to `macos_pkg_builder`
 
 ## 1.0.4
 - Add support for API token authentication for GitHub

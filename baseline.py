@@ -33,7 +33,9 @@ class BaselineBuilder:
 
             baseline_version:      str = "latest",
             swiftdialog_version:   str = "latest",
-            installomator_version: str = "latest"
+            installomator_version: str = "latest",
+
+            signing_identity: str = "",
         ) -> None:
 
         self.configuration_file = configuration_file
@@ -61,6 +63,8 @@ class BaselineBuilder:
         self._baseline_version      = baseline_version
         self._swiftdialog_version   = swiftdialog_version
         self._installomator_version = installomator_version
+
+        self._signing_identity = signing_identity
 
 
     def _fetch_api_content(self, url: str) -> requests.Response:
@@ -398,6 +402,7 @@ class BaselineBuilder:
                 **({ f"{self._build_scripts_path}": "/usr/local/Baseline/Scripts"  } if self._build_scripts_path.exists() else {}),
                 **({ f"{self._build_icons_path}"  : "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
             }
+            **({ "pkg_signing_identity": self._signing_identity } if self._signing_identity != "" else {}),
         )
 
         return pkg_obj.build()
