@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.0.6
+
 ## 1.0.5
 - Switch to logging module for printing
   - To be configured by the calling script
