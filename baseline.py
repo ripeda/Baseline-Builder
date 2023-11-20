@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+"""
+Library for creating macOS packages based on SecondSonConsulting's Baseline:
+- https://github.com/SecondSonConsulting/Baseline
+"""
 
 import os
 import shlex

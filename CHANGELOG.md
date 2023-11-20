@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.0.7
+
 ## 1.0.6
 - Add support for fetching Baseline from branches instead of releases.
   - Allows for easy testing of Baseline changes before they are merged into `main` or have a release associated.
