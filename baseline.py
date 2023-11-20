@@ -79,16 +79,35 @@ class BaselineBuilder:
         return requests.get(url, headers={"Authorization": f"token {os.environ['GITHUB_TOKEN']}"})
 
 
-    def _fetch_baseline(self, version: str) -> None:
+    def _resolve_download_url(self, version: str) -> str:
         """
-        Fetch Baseline from GitHub.
-        Use local copy if available.
+        Resolve what URL to download Baseline from.
         """
+
+        if version.startswith("branch: "):
+            return f"https://github.com/secondsonconsulting/Baseline/archive/refs/heads/{version.replace('branch: ', '')}.zip"
 
         if version == "latest":
             api_url = f"https://api.github.com/repos/secondsonconsulting/Baseline/releases/latest"
         else:
             api_url = f"https://api.github.com/repos/secondsonconsulting/Baseline/releases/tags/{version}"
+
+        result = self._fetch_api_content(api_url)
+        if result.status_code != 200:
+            raise Exception(f"Unable to fetch Baseline from GitHub: {result.status_code}")
+
+        result = result.json()
+        if "zipball_url" not in result:
+            raise Exception(f"No zipball_url in GitHub response: {result}")
+
+        return result["zipball_url"]
+
+
+    def _fetch_baseline(self, version: str) -> None:
+        """
+        Fetch Baseline from GitHub.
+        Use local copy if available.
+        """
 
         logging.info(f"Fetching Baseline: {version}...")
 
@@ -103,20 +122,24 @@ class BaselineBuilder:
                 subprocess.run(["cp", "-c", path, self._build_directory_path])
                 break
 
+        asset_url = ""
         if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
             logging.info("  No cached pkg for Baseline, fetching from GitHub...")
-            result = self._fetch_api_content(api_url)
-            if result.status_code != 200:
-                raise Exception(f"Unable to fetch Baseline from GitHub: {result.status_code}")
-            result = result.json()
-            if "zipball_url" not in result:
-                raise Exception(f"No zipball_url in GitHub response: {result}")
-            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", result["zipball_url"]], cwd=DOWNLOAD_CACHE.name)
+
+            asset_url = self._resolve_download_url(version)
+
+            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", asset_url], cwd=DOWNLOAD_CACHE.name)
             subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
         # Unzip the baseline zip into Baseline folder.
         logging.info(f"  Unzipping...")
-        subprocess.run(["unzip", "-q", "Baseline.zip"], cwd=self._build_directory_path)
+        result = subprocess.run(["unzip", "-q", "Baseline.zip"], cwd=self._build_directory_path)
+        if result.returncode != 0:
+            error_message = "Unable to unzip Baseline.zip"
+            if asset_url != "":
+                error_message += f", verify that the asset URL is valid: {asset_url}"
+
+            raise Exception(error_message)
 
         # Rename first folder to Baseline
         for item in self._build_directory_path.iterdir():

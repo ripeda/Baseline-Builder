@@ -1,6 +1,10 @@
 # Baseline Builder
 
 ## 1.0.6
+- Add support for fetching Baseline from branches instead of releases.
+  - Allows for easy testing of Baseline changes before they are merged into `main` or have a release associated.
+  - Pass `branch: <branch_name>` to `baseline_version` parameter.
+    - ex. `baseline_version="branch: 2.0-beta1"`
 
 ## 1.0.5
 - Switch to logging module for printing
