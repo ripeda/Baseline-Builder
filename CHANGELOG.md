@@ -4,6 +4,7 @@
 - Add support for distribution packages.
   - Allows for deployment through MDM without munki or other package management solutions.
   - Reference: [Mobile Device Management Protocol Reference: macOS App Installation](https://developer.apple.com/business/documentation/MDM-Protocol-Reference.pdf)
+  - Requires macos-pkg-builder 1.0.8 or newer.
 
 ## 1.0.6
 - Add support for fetching Baseline from branches instead of releases.
