@@ -1,5 +1,8 @@
 # Baseline Builder
 
+## 1.0.8
+- CI: Switch to `svenstaro/upload-release-action@v2`
+
 ## 1.0.7
 - Add support for distribution packages.
   - Allows for deployment through MDM without munki or other package management solutions.
