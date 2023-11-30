@@ -2,6 +2,7 @@
 
 ## 1.0.8
 - CI: Switch to `svenstaro/upload-release-action@v2`
+- Validation: Ensure Installomator labels are valid
 
 ## 1.0.7
 - Add support for distribution packages.

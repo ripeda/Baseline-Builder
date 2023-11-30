@@ -16,9 +16,10 @@ import macos_pkg_builder
 from pathlib import Path
 
 # Avoid API rate limits by Github.
-BASELINE_ZIP_CACHE:      str = ""
-SWIFTDIALOG_PKG_CACHE:   str = ""
-INSTALLOMATOR_PKG_CACHE: str = ""
+BASELINE_ZIP_CACHE:              str = ""
+SWIFTDIALOG_PKG_CACHE:           str = ""
+INSTALLOMATOR_PKG_CACHE:         str = ""
+INSTALLOMATOR_SUPPORTED_LABELS: list = []
 
 DOWNLOAD_CACHE: tempfile.TemporaryDirectory = tempfile.TemporaryDirectory()
 
@@ -446,7 +447,7 @@ class BaselineBuilder:
         config = plistlib.load(open(self._baseline_configuration, "rb"))
 
         logging.info("Validating configuration file...")
-        for variant in ["InitialScripts", "Packages", "Scripts"]:
+        for variant in ["InitialScripts", "Installomator", "Packages", "Scripts"]:
             if variant not in config:
                 continue
             for item in config[variant]:
@@ -468,8 +469,44 @@ class BaselineBuilder:
                     file = Path(f"{self._build_directory_path}/{item['Icon']}".replace("/usr/local/Baseline", ""))
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find Icon: {file}")
+                if variant == "Installomator" and "Label" in item:
+                    if self._is_installomator_label_valid(item["Label"]) is False:
+                        raise Exception(f"Invalid Installomator label: {item['Label']}")
 
         logging.info("Configuration file is valid.")
+
+
+    def _is_installomator_label_valid(self, label: str) -> bool:
+        """
+        Verify whether Installomator label is valid.
+        """
+        global INSTALLOMATOR_SUPPORTED_LABELS
+        if INSTALLOMATOR_SUPPORTED_LABELS == []:
+            if self._installomator_version == "latest":
+                url = "https://raw.githubusercontent.com/Installomator/Installomator/main/Installomator.sh"
+            else:
+                url = f"https://raw.githubusercontent.com/Installomator/Installomator/blob/{self._installomator_version}/Installomator.sh"
+
+            result = requests.get(url)
+            if result.status_code != 200:
+                raise Exception(f"Unable to fetch Installomator.sh: {result.status_code}")
+            # Write to download cache.
+            with open(f"{DOWNLOAD_CACHE.name}/Installomator.sh", "w") as file:
+                file.write(result.text)
+
+            # Replicate installomator's label validation.
+            # https://github.com/Installomator/Installomator/blob/v10.5/Installomator.sh#L1413-L1418
+            labels = subprocess.run(["grep", "-E", "^[a-z0-9\_-]*(\)|\|\\\\)$", f"{DOWNLOAD_CACHE.name}/Installomator.sh"], capture_output=True).stdout.decode("utf-8").strip()
+            labels = labels.replace(")", "").replace("|", "").replace("\\", "").split("\n")
+            labels = [label for label in labels if label not in ["longversion", "version"]]
+            labels = [label for label in labels if label.startswith("broken.") is False]
+
+            INSTALLOMATOR_SUPPORTED_LABELS = labels
+
+        if label in INSTALLOMATOR_SUPPORTED_LABELS:
+            return True
+
+        return False
 
 
     def build(self) -> None:
