@@ -168,7 +168,7 @@ class BaselineBuilder:
         self._baseline_configuration      = self._build_directory_path / "Baseline" / "BaselineConfig.plist"
 
 
-    def _fetch_swift_dialog(self, version) -> None:
+    def _fetch_swift_dialog(self, version: str) -> None:
         """
         Fetch swiftDialog from GitHub.
         Use local copy if available.
@@ -206,7 +206,7 @@ class BaselineBuilder:
             subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
-    def _fetch_installomator(self, version) -> None:
+    def _fetch_installomator(self, version: str) -> None:
         """
         Fetch Installomator from GitHub.
         Use local copy if available.
