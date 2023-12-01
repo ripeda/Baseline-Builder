@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='baseline-builder',
-    version='1.0.8',
+    version='1.1.0',
     author='RIPEDA',
     author_email='mykola@ripeda.com',
     license='',
