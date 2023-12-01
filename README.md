@@ -17,7 +17,8 @@ Features implemented:
 Baseline Builder works by taking configuration files for Baseline, and generating a package for deployment. If scripts, packages or images are declared in the file, Baseline Builder will attempt to resolve them and embed inside the package.
 
 * See Baseline's documentation on how to configure: [Baseline Wiki](https://github.com/SecondSonConsulting/Baseline/wiki)
-* Project expects a BaselineConfig.plist to be provided, MDM Profiles are currently not supported
+* If an mobileconfig is provided as input, a resolved version will be written next to the package.
+  * As the mobileconfig method is meant to be used, no BaselineConfig.plist is embedded in the package.
 
 Example configuration can be found in the [Samples](Samples) directory. Below is pulled from RIPEDA Engineering configuration:
 

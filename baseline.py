@@ -167,7 +167,12 @@ class BaselineBuilder:
         self._baseline_preinstall_script  = self._build_directory_path / "Baseline" / "Build" / "Baseline_daemon-preinstall.sh"
         self._baseline_postinstall_script = self._build_directory_path / "Baseline" / "Build" / "Baseline_daemon-postinstall.sh"
         self._baseline_launch_daemon      = self._build_directory_path / "Baseline" / "Build" / "com.secondsonconsulting.baseline.plist"
-        self._baseline_configuration      = self._build_directory_path / "Baseline" / "BaselineConfig.plist"
+
+        if self.configuration_file.endswith(".plist"):
+            self._baseline_configuration = self._build_directory_path / "Baseline" / "BaselineConfig.plist"
+        else:
+            # Write mobileconfig to the pkg output directory.
+            self._baseline_configuration = Path(self.output).parent / Path(Path(self.configuration_file).stem + "-resolved.mobileconfig")
 
 
     def _fetch_swift_dialog(self, version: str) -> None:
@@ -339,15 +344,17 @@ class BaselineBuilder:
         Parse the baseline configuration file and resolve any files.
         """
 
+        config_contents = self.configuration if self.configuration_file.endswith(".plist") else self.configuration["PayloadContent"][0]
+
         for variant in ["InitialScripts", "Installomator", "Packages", "Scripts"]:
-            if variant not in self.configuration:
+            if variant not in config_contents:
                 continue
-            if len(self.configuration[variant]) <= 0:
+            if len(config_contents[variant]) <= 0:
                 continue
 
             logging.info(f"Processing key: {variant}...")
 
-            for item in self.configuration[variant]:
+            for item in config_contents[variant]:
                 if "DisplayName" not in item:
                     raise Exception(f"Missing DisplayName in {variant} item.")
 
@@ -380,9 +387,9 @@ class BaselineBuilder:
 
         # Check if any files are passed in the dialog options.
         for variant in ["DialogListOptions", "DialogSuccessOptions", "DialogFailureOptions"]:
-            if variant not in self.configuration:
+            if variant not in config_contents:
                 continue
-            arguments = self._resolve_arguments(self.configuration[variant])
+            arguments = self._resolve_arguments(config_contents[variant])
 
             logging.info(f"Processing key: {variant}...")
 
@@ -396,7 +403,10 @@ class BaselineBuilder:
                     argument = argument[:-1]
                 arguments[index] = self._resolve_file(argument, "Icon")
 
-            self.configuration[variant] = self._rebuild_arguments(arguments)
+            config_contents[variant] = self._rebuild_arguments(arguments)
+
+        if not self.configuration_file.endswith(".plist"):
+            self.configuration["PayloadContent"][0] = config_contents
 
         # Write the configuration file.
         plistlib.dump(self.configuration, open(self._baseline_configuration, "wb"), sort_keys=False)
@@ -425,9 +435,12 @@ class BaselineBuilder:
             pkg_preinstall_script=self._baseline_preinstall_script,
             pkg_postinstall_script=self._baseline_postinstall_script,
             pkg_file_structure={
+                # Required
                 f"{self._baseline_launch_daemon}" : "/Library/LaunchDaemons/com.secondsonconsulting.baseline.plist",
                 f"{self._baseline_core_script}"   : "/usr/local/Baseline/Baseline.sh",
-                f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist",
+
+                # Dependant on configuration file.
+                **({ f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist", } if not self.configuration_file.endswith(".plist") else {}),
 
                 # Optional if user requested
                 **({ f"{self._build_pkg_path}"    : "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
@@ -447,11 +460,13 @@ class BaselineBuilder:
         """
         config = plistlib.load(open(self._baseline_configuration, "rb"))
 
+        config_contents = config if self.configuration_file.endswith(".plist") else config["PayloadContent"][0]
+
         logging.info("Validating configuration file...")
         for variant in ["InitialScripts", "Installomator", "Packages", "Scripts"]:
-            if variant not in config:
+            if variant not in config_contents:
                 continue
-            for item in config[variant]:
+            for item in config_contents[variant]:
                 if "DisplayName" not in item:
                     raise Exception(f"Missing DisplayName in {variant} item.")
                 path = "ScriptPath" if variant == "Scripts" else "PackagePath"

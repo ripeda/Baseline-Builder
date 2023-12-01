@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Configuration file based on SecondSonConsulting's sample -->
+	<!-- https://github.com/SecondSonConsulting/Baseline/blob/v1.3beta1/ExampleConfigurationFiles/Baseline-BasicExample.mobileconfig -->
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>InitialScripts</key>
+			<array>
+			</array>
+			<key>Installomator</key>
+			<array>
+				<dict>
+					<key>DisplayName</key>
+					<string>Zoom</string>
+					<key>Label</key>
+					<string>zoom</string>
+					<key>Icon</key>
+					<string>Assets/Icons/Zoom.icns</string>
+				</dict>
+				<dict>
+					<key>DisplayName</key>
+					<string>Google Chrome</string>
+					<key>Label</key>
+					<string>googlechromepkg</string>
+					<key>Icon</key>
+					<string>Assets/Icons/Chrome.icns</string>
+				</dict>
+			</array>
+			<key>Packages</key>
+			<array>
+				<dict>
+					<key>DisplayName</key>
+					<string>Printer</string>
+					<key>PackagePath</key>
+					<string>Assets/Packages/Printer.pkg</string>
+					<key>Icon</key>
+					<string>Assets/Icons/Scripts-Printer.png</string>
+				</dict>
+			</array>
+			<key>Scripts</key>
+			<array>
+				<dict>
+					<key>DisplayName</key>
+					<string>Removing Stock Applications</string>
+					<key>ScriptPath</key>
+					<string>Assets/Scripts/universal_remove_stock_apps.sh</string>
+					<key>Icon</key>
+					<string>Assets/Icons/Scripts-Stock-Apps.png</string>
+				</dict>
+				<dict>
+					<key>DisplayName</key>
+					<string>Configuring Dock</string>
+					<key>ScriptPath</key>
+					<string>Assets/Scripts/universal_dock.sh</string>
+					<key>Arguments</key>
+					<string>--append "Slack" "zoom.us"</string>
+					<key>Icon</key>
+					<string>Assets/Icons/Scripts-Dock.png</string>
+				</dict>
+			</array>
+			<key>PayloadDisplayName</key>
+			<string>Baseline</string>
+			<key>PayloadIdentifier</key>
+			<string>com.ripeda.baseline-builder.D031FEC3-06B0-497A-BC0A-5D24AE8E91AD</string>
+			<key>PayloadType</key>
+			<string>com.ripeda.baseline-builder</string>
+			<key>PayloadUUID</key>
+			<string>F46B02DA-FF67-481D-B39C-485F8CC9E39B</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>PayloadDescription</key>
+	<string></string>
+	<key>PayloadDisplayName</key>
+	<string></string>
+	<key>PayloadIdentifier</key>
+	<string>RIPEDA.6F1AD41D-2069-4861-B72C-C5F0D44C9B99</string>
+	<key>PayloadOrganization</key>
+	<string>RIPEDA Consulting Corperation</string>
+	<key>PayloadScope</key>
+	<string>System</string>
+	<key>PayloadType</key>
+	<string>Configuration</string>
+	<key>PayloadUUID</key>
+	<string>8A016FF5-057E-4F31-9043-9C715F061433</string>
+	<key>PayloadVersion</key>
+	<integer>1</integer>
+</dict>
+</plist>

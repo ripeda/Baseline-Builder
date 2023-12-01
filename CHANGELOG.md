@@ -3,6 +3,9 @@
 ## 1.0.8
 - CI: Switch to `svenstaro/upload-release-action@v2`
 - Validation: Ensure Installomator labels are valid
+- Build: Add support for mobileconfig-based inputs
+  - Generates a new mobileconfig next to pkg with suffix `-resolved.mobileconfig`
+  - ex. `ripeda.mobileconfig` -> `ripeda-resolved.mobileconfig`
 
 ## 1.0.7
 - Add support for distribution packages.

@@ -5,3 +5,5 @@ __pycache__
 /build
 /dist
 /Samples/RIPEDA Engineering/RIPEDA Engineering Baseline.pkg
+/Samples/RIPEDA Engineering/baseline.py
+*-resolved.mobileconfig

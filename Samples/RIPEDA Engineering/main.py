@@ -10,12 +10,13 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
-baseline_obj = baseline.BaselineBuilder(
-    configuration_file="Configuration/ripeda.plist",
-    identifier="com.ripeda.baseline.engineering",
-    version="1.0.0",
-    output="RIPEDA Engineering Baseline.pkg",
-)
+for variant in ["plist", "mobileconfig"]:
+    baseline_obj = baseline.BaselineBuilder(
+        configuration_file=f"Configuration/ripeda.{variant}",
+        identifier="com.ripeda.baseline.engineering",
+        version="1.0.0",
+        output="RIPEDA Engineering Baseline.pkg",
+    )
 
-if baseline_obj.build() is False:
-    raise Exception("Build failed")
+    if baseline_obj.build() is False:
+        raise Exception(f"Build failed: {variant}")
