@@ -62,6 +62,7 @@ class BaselineBuilder:
         self._baseline_preinstall_script  = None
         self._baseline_postinstall_script = None
         self._baseline_launch_daemon      = None
+        self._baseline_configuration      = None
 
         self._build_cache_swift_dialog  = cache_swift_dialog
         self._build_cache_installomator = cache_installomator
