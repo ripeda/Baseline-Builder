@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.2.0
+
 ## 1.1.0
 - CI: Switch to `svenstaro/upload-release-action@v2`
 - Validation: Ensure Installomator labels are valid
