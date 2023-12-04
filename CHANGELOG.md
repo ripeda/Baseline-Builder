@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.3.0
+
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing
 
