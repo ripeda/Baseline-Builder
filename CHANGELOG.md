@@ -1,6 +1,7 @@
 # Baseline Builder
 
-## 1.2.0
+## 1.1.1
+- Fix 1.1.0 regression where configuration file may be missing
 
 ## 1.1.0
 - CI: Switch to `svenstaro/upload-release-action@v2`

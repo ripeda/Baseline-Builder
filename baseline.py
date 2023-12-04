@@ -440,7 +440,7 @@ class BaselineBuilder:
                 f"{self._baseline_core_script}"   : "/usr/local/Baseline/Baseline.sh",
 
                 # Dependant on configuration file.
-                **({ f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist", } if not self.configuration_file.endswith(".plist") else {}),
+                **({ f"{self._baseline_configuration}" : "/usr/local/Baseline/BaselineConfig.plist", } if self.configuration_file.endswith(".plist") else {}),
 
                 # Optional if user requested
                 **({ f"{self._build_pkg_path}"    : "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
