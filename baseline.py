@@ -15,6 +15,15 @@ import macos_pkg_builder
 
 from pathlib import Path
 
+BIN_CP:      str = "/bin/cp"
+BIN_CHMOD:   str = "/bin/chmod"
+BIN_MD5:     str = "/sbin/md5"
+BIN_TAR:     str = "/usr/bin/tar"
+BIN_CURL:    str = "/usr/bin/curl"
+BIN_GREP:    str = "/usr/bin/grep"
+BIN_UNZIP:   str = "/usr/bin/unzip"
+BIN_PKGUTIL: str = "/usr/sbin/pkgutil"
+
 # Avoid API rate limits by Github.
 BASELINE_ZIP_CACHE:              str = ""
 SWIFTDIALOG_PKG_CACHE:           str = ""
@@ -134,7 +143,7 @@ class BaselineBuilder:
         for path in search_paths:
             if Path(path).exists():
                 logging.info(f"  Using existing Baseline.zip: {path}")
-                subprocess.run(["cp", "-c", path, self._build_directory_path])
+                subprocess.run([BIN_CP, "-c", path, self._build_directory_path])
                 break
 
         asset_url = ""
@@ -143,12 +152,12 @@ class BaselineBuilder:
 
             asset_url = self._resolve_download_url(version)
 
-            subprocess.run(["curl", "-s", "-L", "-o", "Baseline.zip", asset_url], cwd=DOWNLOAD_CACHE.name)
-            subprocess.run(["cp", "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CURL, "-s", "-L", "-o", "Baseline.zip", asset_url], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CP, "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
 
         # Unzip the baseline zip into Baseline folder.
         logging.info(f"  Unzipping...")
-        result = subprocess.run(["unzip", "-q", "Baseline.zip"], cwd=self._build_directory_path)
+        result = subprocess.run([BIN_UNZIP, "-q", "Baseline.zip"], cwd=self._build_directory_path)
         if result.returncode != 0:
             error_message = "Unable to unzip Baseline.zip"
             if asset_url != "":
@@ -200,7 +209,7 @@ class BaselineBuilder:
         for path in [DOWNLOAD_CACHE.name + "/swiftDialog.pkg", "swiftDialog.pkg"]:
             if Path(path).exists():
                 logging.info(f"  Using existing swiftDialog.pkg: {path}")
-                subprocess.run(["cp", "-c", path, self._build_pkg_path])
+                subprocess.run([BIN_CP, "-c", path, self._build_pkg_path])
                 break
 
         if Path(f"{self._build_pkg_path}/swiftDialog.pkg").exists() is False:
@@ -215,8 +224,8 @@ class BaselineBuilder:
                 raise Exception(f"No assets in GitHub response: {result}")
             if "browser_download_url" not in result["assets"][0]:
                 raise Exception(f"No browser_download_url in GitHub response: {result}")
-            subprocess.run(["curl", "-s", "-L", "-o", "swiftDialog.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
-            subprocess.run(["cp", "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CURL, "-s", "-L", "-o", "swiftDialog.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CP, "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
     def _fetch_installomator(self, version: str) -> None:
@@ -235,7 +244,7 @@ class BaselineBuilder:
         for path in [DOWNLOAD_CACHE.name + "/Installomator.pkg", "Installomator.pkg"]:
             if Path(path).exists():
                 logging.info(f"  Using existing Installomator.pkg: {path}")
-                subprocess.run(["cp", "-c", path, self._build_pkg_path])
+                subprocess.run([BIN_CP, "-c", path, self._build_pkg_path])
                 break
 
         if Path(f"{self._build_pkg_path}/Installomator.pkg").exists() is False:
@@ -250,8 +259,8 @@ class BaselineBuilder:
                 raise Exception(f"No assets in GitHub response: {result}")
             if "browser_download_url" not in result["assets"][0]:
                 raise Exception(f"No browser_download_url in GitHub response: {result}")
-            subprocess.run(["curl", "-s", "-L", "-o", "Installomator.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
-            subprocess.run(["cp", "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CURL, "-s", "-L", "-o", "Installomator.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
+            subprocess.run([BIN_CP, "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
 
     def _resolve_file(self, file: str, variant: str, ignore_if_missing: bool = False) -> str:
@@ -289,7 +298,7 @@ class BaselineBuilder:
 
         # Check if a copy exists next to us
         if (Path(file)).exists():
-            subprocess.run(["cp", "-ac", file, local_destination])
+            subprocess.run([BIN_CP, "-ac", file, local_destination])
             return str(production_destination + "/" + Path(file).name)
 
         if ignore_if_missing is True:
@@ -305,7 +314,7 @@ class BaselineBuilder:
         logging.info(f"    Calculating MD5 for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
-        return subprocess.run(["md5", "-q", file], capture_output=True).stdout.decode("utf-8").strip()
+        return subprocess.run([BIN_MD5, "-q", file], capture_output=True).stdout.decode("utf-8").strip()
 
 
     def _resolve_team_id(self, file: str) -> str:
@@ -317,7 +326,7 @@ class BaselineBuilder:
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
 
         if file.endswith(".pkg"):
-            result = subprocess.run(["pkgutil", "--check-signature", file], capture_output=True).stdout.decode("utf-8").strip()
+            result = subprocess.run([BIN_PKGUTIL, "--check-signature", file], capture_output=True).stdout.decode("utf-8").strip()
             for line in result.split("\n"):
                 if "Developer ID Installer: " not in line:
                     continue
@@ -423,11 +432,11 @@ class BaselineBuilder:
         Set file permissions to ensure that when Baseline is installed, the files are executable.
         """
         if Path(self._baseline_core_script).exists():
-            subprocess.run(["chmod", "+x", self._baseline_core_script])
+            subprocess.run([BIN_CHMOD, "+x", self._baseline_core_script])
 
         if Path(self._build_scripts_path).exists():
             for file in self._build_scripts_path.iterdir():
-                subprocess.run(["chmod", "+x", file])
+                subprocess.run([BIN_CHMOD, "+x", file])
 
 
     def _generate_pkg(self) -> bool:
@@ -518,7 +527,7 @@ class BaselineBuilder:
 
             # Replicate installomator's label validation.
             # https://github.com/Installomator/Installomator/blob/v10.5/Installomator.sh#L1413-L1418
-            labels = subprocess.run(["grep", "-E", "^[a-z0-9\_-]*(\)|\|\\\\)$", f"{DOWNLOAD_CACHE.name}/Installomator.sh"], capture_output=True).stdout.decode("utf-8").strip()
+            labels = subprocess.run([BIN_GREP, "--extended-regexp", "^[a-z0-9\_-]*(\)|\|\\\\)$", f"{DOWNLOAD_CACHE.name}/Installomator.sh"], capture_output=True).stdout.decode("utf-8").strip()
             labels = labels.replace(")", "").replace("|", "").replace("\\", "").split("\n")
             labels = [label for label in labels if label not in ["longversion", "version"]]
             labels = [label for label in labels if label.startswith("broken.") is False]

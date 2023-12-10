@@ -3,6 +3,8 @@
 ## 1.3.0
 - Add support for providing GitHub token via `github_token` parameter
   - Overrides OS environment variable `GITHUB_TOKEN`
+- Enforce strict pathing for executables during build
+  - Ensures non-Apple binaries are not used during build
 
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing
