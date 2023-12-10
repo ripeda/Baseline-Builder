@@ -1,6 +1,8 @@
 # Baseline Builder
 
 ## 1.3.0
+- Add support for providing GitHub token via `github_token` parameter
+  - Overrides OS environment variable `GITHUB_TOKEN`
 
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing

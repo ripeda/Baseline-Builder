@@ -41,7 +41,9 @@ class BaselineBuilder:
 
             signing_identity:      str = "",
 
-            pkg_as_distribution:  bool = False
+            pkg_as_distribution:  bool = False,
+
+            github_token:          str = ""
         ) -> None:
 
         self.configuration_file = configuration_file
@@ -75,6 +77,8 @@ class BaselineBuilder:
 
         self._pkg_as_distribution = pkg_as_distribution
 
+        self._github_token = github_token
+
 
     def _fetch_api_content(self, url: str) -> requests.Response:
         """
@@ -82,6 +86,8 @@ class BaselineBuilder:
         """
         if "api.github.com" not in url:
             return requests.get(url)
+        if self._github_token != "":
+            return requests.get(url, headers={"Authorization": f"token {self._github_token}"})
         if "GITHUB_TOKEN" not in os.environ:
             return requests.get(url)
 
