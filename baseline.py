@@ -469,11 +469,17 @@ class BaselineBuilder:
         return pkg_obj.build()
 
 
-    def _validate(self) -> None:
+    def _validate(self, configuration: str = None, directory: str = None, localize: bool = True) -> None:
         """
         Validate the configuration file.
         """
-        config = plistlib.load(open(self._baseline_configuration, "rb"))
+
+        if configuration is None:
+            configuration = self._baseline_configuration
+        if directory is None:
+            directory = self._build_directory_path
+
+        config = plistlib.load(open(configuration, "rb"))
 
         config_contents = config if self.configuration_file.endswith(".plist") else config["PayloadContent"][0]
 
@@ -486,7 +492,7 @@ class BaselineBuilder:
                     raise Exception(f"Missing DisplayName in {variant} item.")
                 path = "ScriptPath" if variant == "Scripts" else "PackagePath"
                 if path in item:
-                    file = Path(f"{self._build_directory_path}/{item[path]}".replace("/usr/local/Baseline", ""))
+                    file = Path(f"{directory}/{item[path]}".replace("/usr/local/Baseline" if localize is True else "", ""))
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find {path}: {file}")
                     if "MD5" not in item:
@@ -497,7 +503,7 @@ class BaselineBuilder:
                         if item["TeamID"] != self._resolve_team_id(str(file)):
                             raise Exception(f"TeamID mismatch for {path}: {item[path]}")
                 if "Icon" in item:
-                    file = Path(f"{self._build_directory_path}/{item['Icon']}".replace("/usr/local/Baseline", ""))
+                    file = Path(f"{directory}/{item['Icon']}".replace("/usr/local/Baseline" if localize is True else "", ""))
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find Icon: {file}")
                 if variant == "Installomator" and "Label" in item:
@@ -540,6 +546,56 @@ class BaselineBuilder:
         return False
 
 
+    def _validate_pkg(self) -> None:
+        """
+        Extract pkg contents, and validate if it would install correctly.
+        """
+
+        temp_directory = tempfile.TemporaryDirectory()
+        source = Path(temp_directory.name + "/pkg")
+
+        subprocess.run([BIN_PKGUTIL, "--expand", self.output, source], capture_output=True)
+
+        payload_path = f"{temp_directory.name}/pkg/Payload"
+
+        if self._pkg_as_distribution is True:
+            if not Path(f"{temp_directory.name}/pkg/Distribution").exists():
+                raise Exception(f"Unable to find Distribution file in pkg: {self.output}")
+            if not Path(f"{temp_directory.name}/pkg/{Path(self.output).name}").exists():
+                raise Exception(f"Unable to find embedded pkg: {temp_directory.name}/pkg/{Path(self.output).name}")
+
+            payload_path = f"{temp_directory.name}/pkg/{Path(self.output).name}/Payload"
+
+        if not Path(payload_path).exists():
+            raise Exception(f"Unable to find Payload in pkg: {self.output}")
+
+        subprocess.run([BIN_TAR, "--extract", "--file", payload_path, "--directory", source], capture_output=True)
+
+        # Check core files.
+        files = [
+            "/Library/LaunchDaemons/com.secondsonconsulting.baseline.plist",
+            "/usr/local/Baseline/Baseline.sh",
+            "/usr/local/Baseline/BaselineConfig.plist" if self.configuration_file.endswith(".plist") else "",
+        ]
+        for file in files:
+            if file == "":
+                continue
+            if not Path(f"{source}{file}").exists():
+                logging.info(f"Unable to find file in pkg: {source}{file}")
+                subprocess.run(["open", source])
+                input("Press Enter to continue...")
+                raise Exception(f"Unable to find file in pkg: {source}{file}")
+
+            # Verify if plist is malformed, will raise if invalid.
+            if file.endswith(".plist"):
+                plistlib.load(open(f"{source}{file}", "rb"))
+
+        # Load embedded config or exported mobileconfig.
+        config = f"{source}/usr/local/Baseline/BaselineConfig.plist" if self.configuration_file.endswith(".plist") else self._baseline_configuration
+
+        self._validate(configuration=config, directory=source, localize=False)
+
+
     def build(self) -> None:
         """
         Build Baseline
@@ -554,6 +610,21 @@ class BaselineBuilder:
         self._validate()
         if self._generate_pkg() is False:
             raise Exception("Failed to generate pkg.")
+        self.validate_pkg()
+
+
+    def validate_pkg(self) -> None:
+        """
+        Validate Baseline pkg (post-build)
+        """
+        logging.info("Performing post-build validation...")
+        if not Path(self.output).exists():
+            logging.info(f"Unable to find pkg: {self.output}")
+            logging.info("Please build the pkg first.")
+            raise Exception("Unable to find pkg.")
+
+        self._validate_pkg()
+        logging.info("Post-build validation complete.")
 
 
 if __name__ == '__main__':
@@ -563,3 +634,4 @@ if __name__ == '__main__':
 
     builder = BaselineBuilder(args.configuration_file)
     builder.build()
+    builder.validate_pkg()

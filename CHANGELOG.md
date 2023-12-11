@@ -5,6 +5,9 @@
   - Overrides OS environment variable `GITHUB_TOKEN`
 - Enforce strict pathing for executables during build
   - Ensures non-Apple binaries are not used during build
+- Add `validate_pkg()` function for validating built packages.
+  - Will decompress and extract pkg files, mimicking Baseline's install process.
+  - Primarily intended for validating baseline_builder changes in CI, but useful for local testing as well.
 
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing

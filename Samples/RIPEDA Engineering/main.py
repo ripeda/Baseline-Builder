@@ -20,3 +20,5 @@ for variant in ["plist", "mobileconfig"]:
 
     if baseline_obj.build() is False:
         raise Exception(f"Build failed: {variant}")
+
+    baseline_obj.validate_pkg()
