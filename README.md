@@ -67,9 +67,9 @@ baseline_obj = baseline.BaselineBuilder(
                     output="RIPEDA Baseline.pkg"
                 )
 
-if baseline_obj.build() is False:
-    print("Failed to build package")
-    return
+baseline_obj.build()
 
 print("Package built successfully")
 ```
+
+After a build is complete, optional `.validate_pkg()` can be invoked to decompress and validate the package contents automatically.

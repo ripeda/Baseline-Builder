@@ -1,6 +1,20 @@
 """
 Library for creating macOS packages based on SecondSonConsulting's Baseline:
 - https://github.com/SecondSonConsulting/Baseline
+
+Usage:
+
+    >>> import baseline
+
+    >>> baseline_obj = baseline.BaselineBuilder(
+    >>>                     configuration_file="ripeda.plist",
+    >>>                     identifier="com.ripeda.baseline.engineering",
+    >>>                     version="1.0.0",
+    >>>                     output="RIPEDA Baseline.pkg")
+
+    >>> baseline_obj.build()
+
+    >>> baseline_obj.validate_pkg() # Optional
 """
 
 import os
@@ -599,6 +613,9 @@ class BaselineBuilder:
     def build(self) -> None:
         """
         Build Baseline
+
+        Raises:
+            Exception: Unable to generate pkg.
         """
         self._fetch_baseline(version=self._baseline_version)
         if self._build_cache_swift_dialog is True:
@@ -616,6 +633,10 @@ class BaselineBuilder:
     def validate_pkg(self) -> None:
         """
         Validate Baseline pkg (post-build)
+
+        Raises:
+            Exception: Unable to find pkg.
+            Exception: Unable to validate pkg.
         """
         logging.info("Performing post-build validation...")
         if not Path(self.output).exists():
