@@ -15,7 +15,7 @@ for variant in ["plist", "mobileconfig"]:
         configuration_file=f"Configuration/ripeda.{variant}",
         identifier="com.ripeda.baseline.engineering",
         version="1.0.0",
-        output="RIPEDA Engineering Baseline.pkg",
+        output=f"RIPEDA Engineering Baseline ({variant}).pkg",
     )
 
     baseline_obj.build()
