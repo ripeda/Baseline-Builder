@@ -1,10 +1,16 @@
 from setuptools import setup
 
-import baseline
+def get_version():
+    file     = open("baseline.py", "r")
+    variable = "VERSION:"
+    for line in file.readlines():
+        if not line.startswith(variable):
+            continue
+        return line.split("=")[1].strip().strip('"')
 
 setup(
     name='baseline-builder',
-    version=baseline.VERSION,
+    version=get_version(),
     author='RIPEDA',
     author_email='mykola@ripeda.com',
     license='',
