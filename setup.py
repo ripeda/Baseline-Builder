@@ -1,8 +1,10 @@
 from setuptools import setup
 
+import baseline
+
 setup(
     name='baseline-builder',
-    version='1.3.0',
+    version=baseline.VERSION,
     author='RIPEDA',
     author_email='mykola@ripeda.com',
     license='',

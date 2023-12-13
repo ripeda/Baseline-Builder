@@ -29,6 +29,8 @@ import macos_pkg_builder
 
 from pathlib import Path
 
+VERSION:     str = "1.3.0"
+
 BIN_CP:      str = "/bin/cp"
 BIN_CHMOD:   str = "/bin/chmod"
 BIN_MD5:     str = "/sbin/md5"
@@ -70,7 +72,7 @@ class BaselineBuilder:
         ) -> None:
 
         self.configuration_file = configuration_file
-        self.configuration      = plistlib.load(open(self.configuration_file, "rb"))
+        self.configuration      = None
 
         self.identifier = identifier if identifier != "" else "com.example.baseline"
         self.version    = version
@@ -335,7 +337,7 @@ class BaselineBuilder:
         """
         Determine the team ID of a package.
         """
-        logging.info(f"    Determining team ID for: {Path(file).name}...")
+        logging.info(f"    Determining Team ID for: {Path(file).name}...")
         if file.startswith("/usr/local/Baseline/"):
             file = file.replace("/usr/local/Baseline", f"{self._build_directory_path}")
 
@@ -506,17 +508,17 @@ class BaselineBuilder:
                     raise Exception(f"Missing DisplayName in {variant} item.")
                 path = "ScriptPath" if variant == "Scripts" else "PackagePath"
                 if path in item:
+                    logging.info(f"    Validating {path}: {Path(item[path]).name}...")
                     file = Path(f"{directory}/{item[path]}".replace("/usr/local/Baseline" if localize is True else "", ""))
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find {path}: {file}")
-                    if "MD5" not in item:
-                        raise Exception(f"Missing MD5 in {variant} item.")
                     if item["MD5"] != self._calculate_md5(str(file)):
                         raise Exception(f"MD5 mismatch for {path}: {item[path]}")
                     if "TeamID" in item:
                         if item["TeamID"] != self._resolve_team_id(str(file)):
                             raise Exception(f"TeamID mismatch for {path}: {item[path]}")
                 if "Icon" in item:
+                    logging.info(f"    Validating Icon: {Path(item['Icon']).name}...")
                     file = Path(f"{directory}/{item['Icon']}".replace("/usr/local/Baseline" if localize is True else "", ""))
                     if Path(file).exists() is False:
                         raise Exception(f"Unable to find Icon: {file}")
@@ -531,6 +533,8 @@ class BaselineBuilder:
         """
         Verify whether Installomator label is valid.
         """
+        logging.info(f"    Validating Installomator label: {label}...")
+
         global INSTALLOMATOR_SUPPORTED_LABELS
         if INSTALLOMATOR_SUPPORTED_LABELS == []:
             if self._installomator_version == "latest":
@@ -560,28 +564,30 @@ class BaselineBuilder:
         return False
 
 
-    def _validate_pkg(self) -> None:
+    def _validate_pkg(self, pkg: str) -> None:
         """
         Extract pkg contents, and validate if it would install correctly.
         """
 
+        logging
+
         temp_directory = tempfile.TemporaryDirectory()
         source = Path(temp_directory.name + "/pkg")
 
-        subprocess.run([BIN_PKGUTIL, "--expand", self.output, source], capture_output=True)
+        subprocess.run([BIN_PKGUTIL, "--expand", pkg, source], capture_output=True)
 
         payload_path = f"{temp_directory.name}/pkg/Payload"
 
-        if self._pkg_as_distribution is True:
-            if not Path(f"{temp_directory.name}/pkg/Distribution").exists():
-                raise Exception(f"Unable to find Distribution file in pkg: {self.output}")
-            if not Path(f"{temp_directory.name}/pkg/{Path(self.output).name}").exists():
-                raise Exception(f"Unable to find embedded pkg: {temp_directory.name}/pkg/{Path(self.output).name}")
+        if Path(f"{temp_directory.name}/pkg/Distribution").exists():
+            # Grab first pkg in the directory.
+            item = [item for item in Path(f"{temp_directory.name}/pkg").iterdir() if item.name.endswith(".pkg")][0]
+            if item is None:
+                raise Exception(f"Unable to find embedded pkg: {temp_directory.name}/pkg/*.pkg")
 
-            payload_path = f"{temp_directory.name}/pkg/{Path(self.output).name}/Payload"
+            payload_path = f"{temp_directory.name}/pkg/{Path(item).name}/Payload"
 
         if not Path(payload_path).exists():
-            raise Exception(f"Unable to find Payload in pkg: {self.output}")
+            raise Exception(f"Unable to find Payload in pkg: {pkg}")
 
         subprocess.run([BIN_TAR, "--extract", "--file", payload_path, "--directory", source], capture_output=True)
 
@@ -605,7 +611,7 @@ class BaselineBuilder:
                 plistlib.load(open(f"{source}{file}", "rb"))
 
         # Load embedded config or exported mobileconfig.
-        config = f"{source}/usr/local/Baseline/BaselineConfig.plist" if self.configuration_file.endswith(".plist") else self._baseline_configuration
+        config = f"{source}/usr/local/Baseline/BaselineConfig.plist" if self.configuration_file.endswith(".plist") else self.configuration_file
 
         self._validate(configuration=config, directory=source, localize=False)
 
@@ -617,6 +623,8 @@ class BaselineBuilder:
         Raises:
             Exception: Unable to generate pkg.
         """
+        self.configuration = plistlib.load(open(self.configuration_file, "rb"))
+
         self._fetch_baseline(version=self._baseline_version)
         if self._build_cache_swift_dialog is True:
             self._fetch_swift_dialog(version=self._swiftdialog_version)
@@ -627,10 +635,14 @@ class BaselineBuilder:
         self._validate()
         if self._generate_pkg() is False:
             raise Exception("Failed to generate pkg.")
-        self.validate_pkg()
+
+        # Very lazy hack, but set the configuration file to the resolved variant if it was a mobileconfig.
+        if self.configuration_file.endswith(".mobileconfig"):
+            self.configuration_file = str(self._baseline_configuration)
+            logging.info(f"Configuration file set to: {self.configuration_file}")
 
 
-    def validate_pkg(self) -> None:
+    def validate_pkg(self, pkg: str = None) -> None:
         """
         Validate Baseline pkg (post-build)
 
@@ -638,21 +650,70 @@ class BaselineBuilder:
             Exception: Unable to find pkg.
             Exception: Unable to validate pkg.
         """
+        if pkg is None:
+            pkg = self.output
+
         logging.info("Performing post-build validation...")
-        if not Path(self.output).exists():
-            logging.info(f"Unable to find pkg: {self.output}")
+        if not Path(pkg).exists():
+            logging.info(f"Unable to find pkg: {pkg}")
             logging.info("Please build the pkg first.")
             raise Exception("Unable to find pkg.")
 
-        self._validate_pkg()
+        self._validate_pkg(pkg)
         logging.info("Post-build validation complete.")
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Build a baseline from a configuration file.')
-    parser.add_argument('configuration_file', help='The configuration file to use to build the baseline.')
+    """
+    Entry point for manual invocation.
+    """
+
+    help_menu = [
+        f'Baseline Builder v{VERSION}',
+        'Usage:',
+        '- Build a fresh pkg:',
+        '>>> python3 baseline.py --build ripeda.plist',
+        '',
+        '- Validate an existing pkg:',
+        '>>> python3 baseline.py --validate ripeda.mobileconfig RIPEDA.pkg',
+        '   (pkg and mobileconfig positions can be swapped)',
+        '>>> python3 baseline.py --validate RIPEDA.pkg',
+        '   (will resolve to embedded config)',
+    ]
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+        handlers=[logging.StreamHandler()]
+    )
+
+    parser = argparse.ArgumentParser(description='Build a baseline from a configuration file or validate existing pkg.', add_help=False)
+    parser.add_argument('-b', '--build',    metavar='CONFIGURATION')
+    parser.add_argument('-v', '--validate', metavar=('CONFIGURATION', 'PKG'), nargs='+')
+    parser.add_argument('-h', '--help',     action="store_true",)
+
     args = parser.parse_args()
 
-    builder = BaselineBuilder(args.configuration_file)
-    builder.build()
-    builder.validate_pkg()
+    if args.build is not None:
+        baseline_obj = BaselineBuilder(configuration_file=args.build)
+
+        baseline_obj.build()
+        baseline_obj.validate_pkg()
+
+    if args.validate is not None:
+        pkg_arg    = args.validate[0]
+        config_arg = None
+
+        if len(args.validate) == 2:
+            pkg_arg    = args.validate[0] if args.validate[0].endswith(".pkg") else args.validate[1]
+            config_arg = args.validate[0] if args.validate[0].endswith(".mobileconfig") else args.validate[1]
+
+        if config_arg is None:
+            config_arg = ".plist"
+
+        baseline_obj = BaselineBuilder(configuration_file=config_arg)
+        baseline_obj.validate_pkg(pkg=pkg_arg)
+
+    if args.help is True:
+        for line in help_menu:
+            logging.info(line)

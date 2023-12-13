@@ -8,6 +8,11 @@
 - Add `validate_pkg()` function for validating built packages.
   - Will decompress and extract pkg files, mimicking Baseline's install process.
   - Primarily intended for validating baseline_builder changes in CI, but useful for local testing as well.
+- Add support for stand alone validation of existing packages.
+  - `baseline_builder.py --validate <path_to_pkg>`
+  - `baseline_builder.py --validate <path_to_config> <path_to_pkg>`
+- Publish project version in help menu.
+  - Developers can query the `VERSION` variable for external tooling.
 
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing

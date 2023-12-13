@@ -11,6 +11,8 @@ Features implemented:
 - Calculates MD5 for scripts and packages
 - Determines Team ID for local packages
 - Easy imports for chaining into larger CI/CD workflows
+- Validates existing packages:
+  - Checks 
 
 ## Logic
 
@@ -57,6 +59,7 @@ pip3 install baseline-builder
 ## Usage
 
 
+### Building
 ```py
 import baseline
 
@@ -73,3 +76,40 @@ print("Package built successfully")
 ```
 
 After a build is complete, optional `.validate_pkg()` can be invoked to decompress and validate the package contents automatically.
+
+### Validating existing packages via command line
+
+For quick validation of existing packages, the `-v/--validate` flag can be used to decompress and validate the package contents automatically.
+If the package lacks a BaselineConfig.plist, a mobileconfig can be provided to validate against.
+
+```bash
+# Validate package with mobileconfig
+python3 baseline.py --validate "RIPEDA.pkg" ripeda.mobileconfig
+
+# Validate package without config (embedded in pkg)
+python3 baseline.py --validate "RIPEDA.pkg"
+```
+
+```bash
+# Example Output
+$ python3 baseline.py --validate RIPEDA.pkg
+
+Performing post-build validation...
+Validating configuration file...
+    Validating Icon: Zoom.icns...
+    Validating Installomator label: zoom...
+    Validating Icon: Chrome.icns...
+    Validating Installomator label: googlechromepkg...
+    Validating PackagePath: Printer.pkg...
+    Calculating MD5 for: Printer.pkg...
+    Determining Team ID for: Printer.pkg...
+    Validating Icon: Scripts-Printer.png...
+    Validating ScriptPath: universal_remove_stock_apps.sh...
+    Calculating MD5 for: universal_remove_stock_apps.sh...
+    Validating Icon: Scripts-Stock-Apps.png...
+    Validating ScriptPath: universal_dock.sh...
+    Calculating MD5 for: universal_dock.sh...
+    Validating Icon: Scripts-Dock.png...
+Configuration file is valid.
+Post-build validation complete.
+```
