@@ -11,8 +11,7 @@ Features implemented:
 - Calculates MD5 for scripts and packages
 - Determines Team ID for local packages
 - Easy imports for chaining into larger CI/CD workflows
-- Validates existing packages:
-  - Checks 
+- Validates existing packages
 
 ## Logic
 
