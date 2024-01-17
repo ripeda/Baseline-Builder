@@ -1,0 +1,2 @@
+macos-pkg-builder>=1.0.8
+requests

@@ -21,8 +21,11 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Set up Python 3 libraries
-        run: pip3 install setuptools wheel twine build requests
+      - name: Set up Python 3 development tools
+        run: pip3 install setuptools wheel twine build
+
+      - name: Install Dependencies
+        run: pip3 install -r requirements.txt
 
       - name: Validate setup.py
         run: python3 setup.py check -m -s

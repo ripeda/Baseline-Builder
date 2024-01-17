@@ -17,6 +17,10 @@ Usage:
     >>> baseline_obj.validate_pkg() # Optional
 """
 
+__version__:      str = "1.3.0"
+__author__:       str = "RIPEDA Consulting"
+__author_email__: str = "info@ripeda.com"
+
 import os
 import shlex
 import logging
@@ -28,8 +32,6 @@ import subprocess
 import macos_pkg_builder
 
 from pathlib import Path
-
-VERSION:     str = "1.3.0"
 
 BIN_CP:      str = "/bin/cp"
 BIN_CHMOD:   str = "/bin/chmod"
@@ -669,7 +671,7 @@ if __name__ == '__main__':
     """
 
     help_menu = [
-        f'Baseline Builder v{VERSION}',
+        f'Baseline Builder v{__version__}',
         'Usage:',
         '- Build a fresh pkg:',
         '>>> python3 baseline.py --build ripeda.plist',

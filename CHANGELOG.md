@@ -12,7 +12,13 @@
   - `baseline_builder.py --validate <path_to_pkg>`
   - `baseline_builder.py --validate <path_to_config> <path_to_pkg>`
 - Publish project version in help menu.
-  - Developers can query the `VERSION` variable for external tooling.
+- PyPI Wheel Changes:
+  - Following properties added to class:
+    - `__version__`
+    - `__author__` (changes old setup.py author from `RIPEDA` to `RIPEDA Consulting`)
+    - `__author_email__` (changed from employee to support)
+- Add requirements.txt
+  - Resolves missing requests module in CI
 
 ## 1.2.1
 - Fix 1.1.0 regression where configuration file may be missing

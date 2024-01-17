@@ -1,18 +1,17 @@
 from setuptools import setup
 
-def get_version():
-    file     = open("baseline.py", "r")
-    variable = "VERSION:"
-    for line in file.readlines():
-        if not line.startswith(variable):
+def fetch_property(property: str) -> str:
+    for line in open("baseline.py", "r").readlines():
+        if not line.startswith(property):
             continue
         return line.split("=")[1].strip().strip('"')
+    raise ValueError(f"Property {property} not found.")
 
 setup(
     name='baseline-builder',
-    version=get_version(),
-    author='RIPEDA',
-    author_email='mykola@ripeda.com',
+    version=fetch_property("__version__:"),
+    author=fetch_property("__author__:"),
+    author_email=fetch_property("__author_email__:"),
     license='',
     description='Module for generating Baseline packages for deployment',
     long_description=open('README.md').read(),
@@ -20,7 +19,5 @@ setup(
     url='https://github.com/ripeda/Baseline-Builder',
     python_requires='>=3.6',
     py_modules=["baseline"],
-    install_requires=[
-        'macos-pkg-builder>=1.0.8',
-    ],
+    install_requires=open("requirements.txt", "r").readlines(),
 )
