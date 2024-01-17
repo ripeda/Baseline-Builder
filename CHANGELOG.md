@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.4.0
+
 ## 1.3.0
 - Add support for providing GitHub token via `github_token` parameter
   - Overrides OS environment variable `GITHUB_TOKEN`
