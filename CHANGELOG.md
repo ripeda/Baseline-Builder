@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.5.0
+
 ## 1.4.0
 - Clear problematic xattr during build
   - Fixes issue where some scripts and executables may stall for user input
