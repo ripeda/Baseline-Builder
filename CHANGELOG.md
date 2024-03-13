@@ -1,6 +1,8 @@
 # Baseline Builder
 
 ## 1.4.0
+- Clear problematic xattr during build
+  - Fixes issue where some scripts and executables may stall for user input
 
 ## 1.3.0
 - Add support for providing GitHub token via `github_token` parameter

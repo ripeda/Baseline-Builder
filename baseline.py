@@ -457,6 +457,19 @@ class BaselineBuilder:
                 subprocess.run([BIN_CHMOD, "+x", file])
 
 
+    def _clear_problematic_xattr(self) -> None:
+        """
+        Clear problematic extended attributes from the build directory.
+        """
+        xattr_to_remove = [
+            "com.apple.quarantine",
+            "com.apple.metadata:kMDItemDownloadedDate",
+            "com.apple.metadata:kMDItemWhereFroms",
+        ]
+        for xattr in xattr_to_remove:
+            subprocess.run(["xattr", "-dr", xattr, self._build_directory_path])
+
+
     def _generate_pkg(self) -> bool:
         """
         Generate package using macos_pkg_builder library.
@@ -634,6 +647,7 @@ class BaselineBuilder:
             self._fetch_installomator(version=self._installomator_version)
         self._parse_baseline_configuration()
         self._set_file_permissions()
+        self._clear_problematic_xattr()
         self._validate()
         if self._generate_pkg() is False:
             raise Exception("Failed to generate pkg.")
