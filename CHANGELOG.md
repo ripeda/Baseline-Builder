@@ -1,6 +1,11 @@
 # Baseline Builder
 
 ## 1.5.0
+- Restructure project to be more package-like
+  - Does not affect import or usage
+- Expand CLI usage through setup.py
+  - `baseline` command now available
+  - `baseline --help` for usage
 
 ## 1.4.0
 - Clear problematic xattr during build
