@@ -40,6 +40,7 @@ BIN_TAR:     str = "/usr/bin/tar"
 BIN_CURL:    str = "/usr/bin/curl"
 BIN_GREP:    str = "/usr/bin/grep"
 BIN_UNZIP:   str = "/usr/bin/unzip"
+BIN_XATTR:   str = "/usr/bin/xattr"
 BIN_PKGUTIL: str = "/usr/sbin/pkgutil"
 
 # Avoid API rate limits by Github.
@@ -467,7 +468,7 @@ class BaselineBuilder:
             "com.apple.metadata:kMDItemWhereFroms",
         ]
         for xattr in xattr_to_remove:
-            subprocess.run(["xattr", "-dr", xattr, self._build_directory_path])
+            subprocess.run([BIN_XATTR, "-dr", xattr, self._build_directory_path])
 
 
     def _generate_pkg(self) -> bool:
