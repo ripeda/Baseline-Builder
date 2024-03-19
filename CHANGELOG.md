@@ -1,5 +1,11 @@
 # Baseline Builder
 
+## 1.6.0
+- Add support for creatign "faux" app icon for SimpleMDM
+  - New optional parameter: `simple_mdm_icon`
+    - Path to a .png file to be used as the app icon
+  - Intended to work around lack of pkg icon support in SimpleMDM's API
+
 ## 1.5.0
 - Restructure project to be more package-like
   - Does not affect import or usage

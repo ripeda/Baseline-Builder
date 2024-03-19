@@ -51,7 +51,9 @@ class BaselineBuilder:
 
             pkg_as_distribution:  bool = False,
 
-            github_token:          str = ""
+            github_token:          str = "",
+
+            simple_mdm_icon:       str = None
         ) -> None:
 
         self.configuration_file = configuration_file
@@ -86,6 +88,8 @@ class BaselineBuilder:
         self._pkg_as_distribution = pkg_as_distribution
 
         self._github_token = github_token
+
+        self._simple_mdm_icon = simple_mdm_icon
 
 
     def _fetch_api_content(self, url: str) -> requests.Response:
@@ -451,6 +455,19 @@ class BaselineBuilder:
             subprocess.run([BIN_XATTR, "-dr", xattr, self._build_directory_path])
 
 
+    def _generate_fake_icon(self) -> None:
+        """
+        SimpleMDM's API doesn't support custom icons
+        Thus create a fake Baseline app for it to pull the icon from.
+        """
+        app_path = self._build_directory_path / ".Baseline.app"
+        Path(app_path, "Contents/Resources").mkdir(parents=True)
+        result = subprocess.run([BIN_CP, "-c", self._simple_mdm_icon, app_path / "Contents/Resources/"])
+        if result.returncode != 0:
+            raise Exception(f"Unable to copy icon to fake app: {self._simple_mdm_icon}")
+        plistlib.dump({"CFBundleIconFile": Path(self._simple_mdm_icon).name}, open(app_path / "Contents/Info.plist", "wb"), sort_keys=False)
+
+
     def _generate_pkg(self) -> bool:
         """
         Generate package using macos_pkg_builder library.
@@ -473,6 +490,9 @@ class BaselineBuilder:
                 **({ f"{self._build_pkg_path}"    : "/usr/local/Baseline/Packages" } if self._build_pkg_path.exists()     else {}),
                 **({ f"{self._build_scripts_path}": "/usr/local/Baseline/Scripts"  } if self._build_scripts_path.exists() else {}),
                 **({ f"{self._build_icons_path}"  : "/usr/local/Baseline/Icons"    } if self._build_icons_path.exists()   else {}),
+
+                # SimpleMDM icon (if requested)
+                **({ f"{self._build_directory_path}/.Baseline.app" : "/usr/local/Baseline/.Baseline.app" } if self._simple_mdm_icon is not None else {})
             },
             **({ "pkg_signing_identity": self._signing_identity } if self._signing_identity != "" else {}),
             **({ "pkg_as_distribution": self._pkg_as_distribution } if self._pkg_as_distribution is True else {})
@@ -630,6 +650,8 @@ class BaselineBuilder:
         self._set_file_permissions()
         self._clear_problematic_xattr()
         self._validate()
+        if self._simple_mdm_icon is not None:
+            self._generate_fake_icon()
         if self._generate_pkg() is False:
             raise Exception("Failed to generate pkg.")
 
