@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.7.0
+
 ## 1.6.0
 - Add support for creatign "faux" app icon for SimpleMDM
   - New optional parameter: `simple_mdm_icon`
