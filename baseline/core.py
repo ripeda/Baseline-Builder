@@ -13,6 +13,8 @@ import macos_pkg_builder
 
 from pathlib import Path
 
+from . import __version__
+
 BIN_CP:      str = "/bin/cp"
 BIN_CHMOD:   str = "/bin/chmod"
 BIN_MD5:     str = "/sbin/md5"
@@ -53,7 +55,9 @@ class BaselineBuilder:
 
             github_token:          str = "",
 
-            simple_mdm_icon:       str = None
+            simple_mdm_icon:       str = None,
+
+            embed_versioning:      bool = True,
         ) -> None:
 
         self.configuration_file = configuration_file
@@ -91,6 +95,19 @@ class BaselineBuilder:
 
         self._simple_mdm_icon = simple_mdm_icon
 
+        self._embed_versioning = embed_versioning
+
+        self._baseline_resolved_version      = None
+        self._swiftdialog_resolved_version   = None
+        self._installomator_resolved_version = None
+
+        if baseline_version != "latest":
+            self._baseline_resolved_version = baseline_version
+        if swiftdialog_version != "latest":
+            self._swiftdialog_resolved_version = swiftdialog_version
+        if installomator_version != "latest":
+            self._installomator_resolved_version = installomator_version
+
 
     def _fetch_api_content(self, url: str) -> requests.Response:
         """
@@ -106,7 +123,7 @@ class BaselineBuilder:
         return requests.get(url, headers={"Authorization": f"token {os.environ['GITHUB_TOKEN']}"})
 
 
-    def _resolve_download_url(self, version: str) -> str:
+    def _resolve_baseline_download_url(self, version: str) -> str:
         """
         Resolve what URL to download Baseline from.
         """
@@ -126,6 +143,8 @@ class BaselineBuilder:
         result = result.json()
         if "zipball_url" not in result:
             raise Exception(f"No zipball_url in GitHub response: {result}")
+
+        self._baseline_resolved_version = result["tag_name"]
 
         return result["zipball_url"]
 
@@ -153,7 +172,7 @@ class BaselineBuilder:
         if Path(f"{self._build_directory_path}/Baseline.zip").exists() is False:
             logging.info("  No cached pkg for Baseline, fetching from GitHub...")
 
-            asset_url = self._resolve_download_url(version)
+            asset_url = self._resolve_baseline_download_url(version)
 
             subprocess.run([BIN_CURL, "-s", "-L", "-o", "Baseline.zip", asset_url], cwd=DOWNLOAD_CACHE.name)
             subprocess.run([BIN_CP, "-c", "Baseline.zip", self._build_directory_path], cwd=DOWNLOAD_CACHE.name)
@@ -230,6 +249,8 @@ class BaselineBuilder:
             subprocess.run([BIN_CURL, "-s", "-L", "-o", "swiftDialog.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run([BIN_CP, "-c", "swiftDialog.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
 
+            self._swiftdialog_version = result["tag_name"]
+
 
     def _fetch_installomator(self, version: str) -> None:
         """
@@ -264,6 +285,8 @@ class BaselineBuilder:
                 raise Exception(f"No browser_download_url in GitHub response: {result}")
             subprocess.run([BIN_CURL, "-s", "-L", "-o", "Installomator.pkg", result["assets"][0]["browser_download_url"]], cwd=DOWNLOAD_CACHE.name)
             subprocess.run([BIN_CP, "-c", "Installomator.pkg", self._build_pkg_path], cwd=DOWNLOAD_CACHE.name)
+
+            self._installomator_version = result["tag_name"]
 
 
     def _resolve_file(self, file: str, variant: str, ignore_if_missing: bool = False) -> str:
@@ -425,6 +448,19 @@ class BaselineBuilder:
 
         if not self.configuration_file.endswith(".plist"):
             self.configuration["PayloadContent"][0] = config_contents
+
+
+        # If embed versioning is requested, update the version in the configuration file.
+        # Add 'Baseline-Builder' dictionary to top level of configuration file.
+        if self._embed_versioning is True:
+            if "Baseline-Builder" not in self.configuration:
+                self.configuration["Baseline-Builder"] = {}
+            self.configuration["Baseline-Builder"]["Project Version"] = self.version
+            self.configuration["Baseline-Builder"]["Project Identifier"] = self.identifier
+            self.configuration["Baseline-Builder"]["Baseline-Builder Version"] = __version__
+            self.configuration["Baseline-Builder"]["Baseline Version"] = self._baseline_resolved_version or "N/A"
+            self.configuration["Baseline-Builder"]["swiftDialog Version"] = self._swiftdialog_resolved_version or "N/A"
+            self.configuration["Baseline-Builder"]["Installomator Version"] = self._installomator_resolved_version or "N/A"
 
         # Write the configuration file.
         plistlib.dump(self.configuration, open(self._baseline_configuration, "wb"), sort_keys=False)
