@@ -1,5 +1,7 @@
 # Baseline Builder
 
+## 1.8.0
+
 ## 1.7.0
 - Publish Baseline, swiftDialog and Installomator versions in new `Baseline-Builder` key of `BaselineConfig.plist`
   - Configurable by `embed_versioning` parameter
