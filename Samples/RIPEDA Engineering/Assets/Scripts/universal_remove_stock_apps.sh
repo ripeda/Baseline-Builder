@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/zsh --no-rcs
 
 # Remove stock applications from OS if available from VPP
 # Primarily iLife apps, as clients can associate their own Apple ID to these apps
