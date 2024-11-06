@@ -413,7 +413,7 @@ class BaselineBuilder:
                         item["TeamID"] = team_id
                     item["MD5"] = self._calculate_md5(item["PackagePath"])
 
-                if "Arguments" in item:
+                if "Arguments" in item and variant != "Installomator":
                     arguments = self._resolve_arguments(item["Arguments"])
                     for index, argument in enumerate(arguments):
                         if argument.startswith("-"):

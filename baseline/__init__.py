@@ -17,7 +17,7 @@ Usage:
     >>> baseline_obj.validate_pkg() # Optional
 """
 
-__version__:      str = "1.8.0"
+__version__:      str = "1.7.1"
 __author__:       str = "RIPEDA Consulting"
 __author_email__: str = "info@ripeda.com"
 

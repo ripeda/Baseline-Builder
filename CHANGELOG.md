@@ -1,6 +1,8 @@
 # Baseline Builder
 
-## 1.8.0
+## 1.7.1
+- Avoid additional parsing of Installomator arguments if present
+  - Fixes issue where `valueforarguments` label may be incorrectly parsed
 
 ## 1.7.0
 - Publish Baseline, swiftDialog and Installomator versions in new `Baseline-Builder` key of `BaselineConfig.plist`
